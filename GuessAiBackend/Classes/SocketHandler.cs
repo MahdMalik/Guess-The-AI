@@ -1,3 +1,4 @@
+using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -8,6 +9,13 @@ namespace Classes
 {
     public static class SocketHandler
     {
+        async public static Task SendPacket(object message, WebSocket socket)
+        {
+            string jsonMessage = JsonSerializer.Serialize(message);
+            var bufferMessage = Encoding.UTF8.GetBytes(jsonMessage);
+            await socket.SendAsync(new ArraySegment<byte>(bufferMessage), WebSocketMessageType.Text, true, CancellationToken.None);
+        }
+
         async public static Task HandleSocket(WebSocket socket)
         {
             while (socket.State == WebSocketState.Open)
@@ -27,14 +35,16 @@ namespace Classes
                         await socket.CloseAsync(WebSocketCloseStatus.InvalidPayloadData, "error deseralizing json", CancellationToken.None);
                     }
 
+                    Player ourPlayer = null;
+                    bool success = false;
+                    String message = "";
+                    object sentMessage = null;
                     switch (messageData.messageType)
                     {
                         //if the message is to join a queue, do this:
                         case "Join Queue":
                             //first, create our player, then put them into the queue
-                            Player ourPlayer = new Player(messageData.username);
-                            bool success = false;
-                            String message = "";
+                            ourPlayer = new Player(messageData.username);
                             switch (messageData.queueType)
                             {
                                 case "One Bot Game":
@@ -45,14 +55,33 @@ namespace Classes
                                     await socket.CloseAsync(WebSocketCloseStatus.InvalidPayloadData, "queue type didn't match", CancellationToken.None);
                                     break;
                             }
-                            var sentMessage = new
+                            sentMessage = new
                             {
                                 success = success,
                                 message = message
                             };
-                            string jsonMessage = JsonSerializer.Serialize(sentMessage);
-                            var bufferMessage = Encoding.UTF8.GetBytes(jsonMessage);
-                            await socket.SendAsync(new ArraySegment<byte>(bufferMessage), WebSocketMessageType.Text, true, CancellationToken.None);
+                            await SendPacket(sentMessage, socket);
+                            break;
+                        case "Leave Queue":
+                            switch (messageData.queueType)
+                            {
+                                case "One Bot Game":
+                                    (success, message, ourPlayer) = Globals.oneBotQueue.RemovePlayer(messageData.username);
+                                    break;
+                                default:
+                                    await socket.CloseAsync(WebSocketCloseStatus.InvalidPayloadData, "queue type didn't match", CancellationToken.None);
+                                    break;
+                            }
+                            if (success)
+                            {
+                                message += ", removed player: " + ourPlayer.GetName();
+                            }
+                            sentMessage = new
+                            {
+                                success = success,
+                                message = message
+                            };
+                            await SendPacket(sentMessage, socket);
                             break;
                         default:
                             await socket.CloseAsync(WebSocketCloseStatus.InvalidPayloadData, "message type wasn't found", CancellationToken.None);
