@@ -33,26 +33,26 @@ namespace Classes
                         case "Join Queue":
                             //first, create our player, then put them into the queue
                             Player ourPlayer = new Player(messageData.username);
-                            bool success;
-                            String message;
+                            bool success = false;
+                            String message = "";
                             switch (messageData.queueType)
                             {
                                 case "One Bot Game":
                                     (success, message) = Globals.oneBotQueue.AddPlayer(ourPlayer, false);
-                                    if (success)
-                                    {
-
-                                    }
-                                    else
-                                    {
-
-                                    }
                                     break;
                                 //if try to join a quue that doesn't exist, call out their bs
                                 default:
                                     await socket.CloseAsync(WebSocketCloseStatus.InvalidPayloadData, "queue type didn't match", CancellationToken.None);
                                     break;
                             }
+                            var sentMessage = new
+                            {
+                                success = success,
+                                message = message
+                            };
+                            string jsonMessage = JsonSerializer.Serialize(sentMessage);
+                            var bufferMessage = Encoding.UTF8.GetBytes(jsonMessage);
+                            await socket.SendAsync(new ArraySegment<byte>(bufferMessage), WebSocketMessageType.Text, true, CancellationToken.None);
                             break;
                         default:
                             await socket.CloseAsync(WebSocketCloseStatus.InvalidPayloadData, "message type wasn't found", CancellationToken.None);
