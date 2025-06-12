@@ -5,8 +5,8 @@ import axios from "axios";
 
 export default function Home() {
     
-    const testNetCall = async() => {
-        const response = await axios.get("http://localhost:5017/test")
+    const joinQueue = async() => {
+        const response = await axios.get("http://localhost:5017/join_queue")
         const data = response.data
         if(data.success)
         {
