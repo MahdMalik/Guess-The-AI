@@ -6,7 +6,7 @@ import { useEffect, useReducer, useState, useRef } from "react";
 
 export default function Home() {
     const [inQueue, setQueueStatus] = useState(false);
-    const [username, setName] = useState("walter")
+    const [username, setName] = useState(navigator.userAgent)
     const socket = useRef(null);
 
     //helper function to await getting am essage from the server through promises
