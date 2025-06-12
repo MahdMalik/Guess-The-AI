@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-namespace Objects
+namespace Classes
 {
     public class GameQueue
     {
@@ -105,6 +105,11 @@ namespace Objects
                 }
             }
             return (true, "success", returnedPlayers);
+        }
+
+        public ushort GetQueueSize()
+        {
+            return size;
         }
     }
 }

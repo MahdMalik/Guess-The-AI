@@ -6,7 +6,9 @@ import axios from "axios";
 export default function Home() {
     
     const joinQueue = async() => {
-        const response = await axios.get("http://localhost:5017/join_queue")
+        const response = await axios.get("http://localhost:5017/joinQueue", {
+            username: "walter"
+        })
         const data = response.data
         if(data.success)
         {
@@ -20,7 +22,7 @@ export default function Home() {
     
     return (
         <div>
-            <Button variant="contained" onClick={testNetCall}>Click Here To Get Added to the Queue!</Button>
+            <Button variant="contained" onClick={joinQueue}>Click Here To Get Added to the Queue!</Button>
         </div>
     )
 }

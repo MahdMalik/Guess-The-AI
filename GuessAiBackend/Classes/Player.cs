@@ -1,4 +1,4 @@
-namespace Objects
+namespace Classes
 {
     public class Player
     {
