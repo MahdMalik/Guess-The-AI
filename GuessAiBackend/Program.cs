@@ -31,6 +31,9 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseWebSockets();
 
+LinkedList<ClientWebSocket> sockets;
+Dictionary<Player, LinkedListNode<ClientWebSocket>> socketPlayerMapping;
+
 //app.Use is a way to add middleware.
 app.Use(async (context, next) =>
 {
@@ -42,7 +45,8 @@ app.Use(async (context, next) =>
         {
             var socket = await context.WebSockets.AcceptWebSocketAsync();
             //this will be our buffer
-            await SocketHandler.HandleSocket(socket);
+            SocketHandler newSocket = new SocketHandler(socket);
+            await newSocket.HandleSocket();
         }
         //if not, don't want to connect so give them an error
         else
@@ -58,7 +62,6 @@ app.Use(async (context, next) =>
     }
 });
 
-GameQueue oneBotQueue = new GameQueue("One Bot Game", 4);
 
 
 // Minimal test endpoint

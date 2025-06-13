@@ -7,93 +7,121 @@ using Microsoft.VisualBasic;
 
 namespace Classes
 {
-    public static class SocketHandler
+    public class SocketHandler
     {
-        async public static Task SendPacket(object message, WebSocket socket)
+        public WebSocket socket;
+        public CancellationTokenSource sendToken;
+
+        public Player? ourPlayer;
+
+        public SocketHandler(WebSocket theSocket)
+        {
+            socket = theSocket;
+            sendToken = new CancellationTokenSource();
+        }
+
+        async public Task SendPacket(object message)
         {
             string jsonMessage = JsonSerializer.Serialize(message);
             var bufferMessage = Encoding.UTF8.GetBytes(jsonMessage);
             await socket.SendAsync(new ArraySegment<byte>(bufferMessage), WebSocketMessageType.Text, true, CancellationToken.None);
         }
 
-        async public static Task HandleSocket(WebSocket socket)
+        async public Task ReceiveData(byte[] buffer, WebSocketReceiveResult receivedData)
+        {
+            //should be sending text as first message
+            if (receivedData.MessageType == WebSocketMessageType.Text)
+            {
+                //first convert bytes to json
+                string jsonData = Encoding.UTF8.GetString(buffer, 0, receivedData.Count);
+                //now convert it to a class
+                ClientMessage? messageData = JsonSerializer.Deserialize<ClientMessage>(jsonData);
+                if (messageData == null)
+                {
+                    await socket.CloseAsync(WebSocketCloseStatus.InvalidPayloadData, "error deseralizing json", CancellationToken.None);
+                }
+                bool success = false;
+                String message = "";
+                object sentMessage;
+                switch (messageData.messageType)
+                {
+                    //if the message is to join a queue, do this:
+                    case "Join Queue":
+                        //first, create our player, then put them into the queue
+                        ourPlayer = new Player(messageData.username);
+                        switch (messageData.queueType)
+                        {
+                            case "One Bot Game":
+                                (success, message) = Globals.oneBotQueue.AddPlayer(ourPlayer, false);
+                                break;
+                            //if try to join a quue that doesn't exist, call out their bs
+                            default:
+                                await socket.CloseAsync(WebSocketCloseStatus.InvalidPayloadData, "queue type didn't match", CancellationToken.None);
+                                break;
+                        }
+                        sentMessage = new
+                        {
+                            success = success,
+                            message = message
+                        };
+                        await SendPacket(sentMessage);
+                        break;
+                    case "Leave Queue":
+                        switch (messageData.queueType)
+                        {
+                            case "One Bot Game":
+                                (success, message, ourPlayer) = Globals.oneBotQueue.RemovePlayer(messageData.username);
+                                break;
+                            default:
+                                await socket.CloseAsync(WebSocketCloseStatus.InvalidPayloadData, "queue type didn't match", CancellationToken.None);
+                                break;
+                        }
+                        if (success)
+                        {
+                            message += ", removed player: " + ourPlayer.GetName();
+                        }
+                        sentMessage = new
+                        {
+                            success = success,
+                            message = message
+                        };
+                        await SendPacket(sentMessage);
+                        break;
+                    default:
+                        await socket.CloseAsync(WebSocketCloseStatus.InvalidPayloadData, "message type wasn't found", CancellationToken.None);
+                        break;
+                }
+            }
+            //otherwise, want to close the connection and stop it
+            else
+            {
+                await socket.CloseAsync(WebSocketCloseStatus.InvalidMessageType, "expected first message with user info, didn't get it", CancellationToken.None);
+            }
+        }
+
+        async public Task HandleSocket()
         {
             while (socket.State == WebSocketState.Open)
             {
                 byte[] buffer = new byte[5000];
                 //array segment is just way to specify where to write in the buffer, by default index 0 is start and count is end of array
-                var firstConnectionData = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-                //should be sending text as first message
-                if (firstConnectionData.MessageType == WebSocketMessageType.Text)
+                try
                 {
-                    //first convert bytes to json
-                    string jsonData = Encoding.UTF8.GetString(buffer, 0, firstConnectionData.Count);
-                    //now convert it to a class
-                    ClientMessage? messageData = JsonSerializer.Deserialize<ClientMessage>(jsonData);
-                    if (messageData == null)
-                    {
-                        await socket.CloseAsync(WebSocketCloseStatus.InvalidPayloadData, "error deseralizing json", CancellationToken.None);
-                    }
-
-                    Player ourPlayer = null;
-                    bool success = false;
-                    String message = "";
-                    object sentMessage = null;
-                    switch (messageData.messageType)
-                    {
-                        //if the message is to join a queue, do this:
-                        case "Join Queue":
-                            //first, create our player, then put them into the queue
-                            ourPlayer = new Player(messageData.username);
-                            switch (messageData.queueType)
-                            {
-                                case "One Bot Game":
-                                    (success, message) = Globals.oneBotQueue.AddPlayer(ourPlayer, false);
-                                    break;
-                                //if try to join a quue that doesn't exist, call out their bs
-                                default:
-                                    await socket.CloseAsync(WebSocketCloseStatus.InvalidPayloadData, "queue type didn't match", CancellationToken.None);
-                                    break;
-                            }
-                            sentMessage = new
-                            {
-                                success = success,
-                                message = message
-                            };
-                            await SendPacket(sentMessage, socket);
-                            break;
-                        case "Leave Queue":
-                            switch (messageData.queueType)
-                            {
-                                case "One Bot Game":
-                                    (success, message, ourPlayer) = Globals.oneBotQueue.RemovePlayer(messageData.username);
-                                    break;
-                                default:
-                                    await socket.CloseAsync(WebSocketCloseStatus.InvalidPayloadData, "queue type didn't match", CancellationToken.None);
-                                    break;
-                            }
-                            if (success)
-                            {
-                                message += ", removed player: " + ourPlayer.GetName();
-                            }
-                            sentMessage = new
-                            {
-                                success = success,
-                                message = message
-                            };
-                            await SendPacket(sentMessage, socket);
-                            break;
-                        default:
-                            await socket.CloseAsync(WebSocketCloseStatus.InvalidPayloadData, "message type wasn't found", CancellationToken.None);
-                            break;
-                    }
+                    WebSocketReceiveResult receivedData = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                    await ReceiveData(buffer, receivedData);
                 }
-                //otherwise, want to close the connection and stop it
-                else
+                //when twaiting is interrupted by a command to send data 
+                catch (OperationCanceledException)
                 {
-                    await socket.CloseAsync(WebSocketCloseStatus.InvalidMessageType, "expected first message with user info, didn't get it", CancellationToken.None);
+                    sendToken = new CancellationTokenSource();
+                    break;
                 }
             }
+        }
+
+        public void ActivateToken()
+        {
+            sendToken.Cancel();
         }
     }
 }
