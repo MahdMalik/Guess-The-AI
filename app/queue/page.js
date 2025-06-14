@@ -96,6 +96,18 @@ export default function Home() {
                         setQueueStatus(false);
                         socket.current = null;
                     }
+                    socket.current.onmessage = (response) => {
+                        const data = JSON.parse(response.data)
+                        if(data.success && data.message == "Game Starting!")
+                        {
+                            alert("Game Starting, Enough Players!");
+                            window.location.href = "/Match";
+                        }
+                        else
+                        {
+                            alert("DDIDY PARTY!");
+                        }
+                    }
                 }
                 else
                 {

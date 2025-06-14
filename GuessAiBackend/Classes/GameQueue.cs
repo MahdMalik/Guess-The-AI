@@ -88,21 +88,21 @@ namespace Classes
                 //pass in you want to remove teh first player, get results here
                 var removeResult = RemovePlayer(queue.First);
                 //if it worked, add them to the array
-                if (removeResult.success)
-                {
-                    returnedPlayers[i] = removeResult.removedPlayer;
-                }
-                //if it didn't work, add them back to the start of the queue
-                else
-                {
-                    //in reverse order of the outer for loop, add the remaining players back. Assume for current
-                    //player, since there was an error returned, they weren't even removed
-                    for (sbyte j = (sbyte)(i - 1); j >= 0; j--)
+                    if (removeResult.success)
                     {
-                        AddPlayer(returnedPlayers[j], true);
+                        returnedPlayers[i] = removeResult.removedPlayer;
                     }
-                    return (false, "failed to remove a player: " + removeResult.message, null);
-                }
+                    //if it didn't work, add them back to the start of the queue
+                    else
+                    {
+                        //in reverse order of the outer for loop, add the remaining players back. Assume for current
+                        //player, since there was an error returned, they weren't even removed
+                        for (sbyte j = (sbyte)(i - 1); j >= 0; j--)
+                        {
+                            AddPlayer(returnedPlayers[j], true);
+                        }
+                        return (false, "failed to remove a player: " + removeResult.message, null);
+                    }
             }
             return (true, "success", returnedPlayers);
         }

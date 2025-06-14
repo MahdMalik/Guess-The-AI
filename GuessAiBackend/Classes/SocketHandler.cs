@@ -1,3 +1,4 @@
+using System.Data;
 using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
@@ -11,6 +12,7 @@ namespace Classes
     {
         public WebSocket socket;
         public CancellationTokenSource sendToken;
+        public object plantedMessage;
 
         public Player? ourPlayer;
 
@@ -20,11 +22,12 @@ namespace Classes
             sendToken = new CancellationTokenSource();
         }
 
-        async public Task SendPacket(object message)
+        async public Task SendPacket()
         {
-            string jsonMessage = JsonSerializer.Serialize(message);
+            string jsonMessage = JsonSerializer.Serialize(plantedMessage);
             var bufferMessage = Encoding.UTF8.GetBytes(jsonMessage);
             await socket.SendAsync(new ArraySegment<byte>(bufferMessage), WebSocketMessageType.Text, true, CancellationToken.None);
+            plantedMessage = null;
         }
 
         async public Task ReceiveData(byte[] buffer, WebSocketReceiveResult receivedData)
@@ -42,7 +45,6 @@ namespace Classes
                 }
                 bool success = false;
                 String message = "";
-                object sentMessage;
                 switch (messageData.messageType)
                 {
                     //if the message is to join a queue, do this:
@@ -59,12 +61,16 @@ namespace Classes
                                 await socket.CloseAsync(WebSocketCloseStatus.InvalidPayloadData, "queue type didn't match", CancellationToken.None);
                                 break;
                         }
-                        sentMessage = new
+                        if (success)
+                        {
+                            Globals.socketPlayerMapping.Add(ourPlayer, this);
+                        }
+                        plantedMessage = new
                         {
                             success = success,
                             message = message
                         };
-                        await SendPacket(sentMessage);
+                        await SendPacket();
                         break;
                     case "Leave Queue":
                         switch (messageData.queueType)
@@ -78,14 +84,16 @@ namespace Classes
                         }
                         if (success)
                         {
+                            //have to remove our player from here as well
+                            Globals.socketPlayerMapping.Remove(ourPlayer);
                             message += ", removed player: " + ourPlayer.GetName();
                         }
-                        sentMessage = new
+                        plantedMessage = new
                         {
                             success = success,
                             message = message
                         };
-                        await SendPacket(sentMessage);
+                        await SendPacket();
                         break;
                     default:
                         await socket.CloseAsync(WebSocketCloseStatus.InvalidPayloadData, "message type wasn't found", CancellationToken.None);
@@ -107,20 +115,26 @@ namespace Classes
                 //array segment is just way to specify where to write in the buffer, by default index 0 is start and count is end of array
                 try
                 {
-                    WebSocketReceiveResult receivedData = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                    WebSocketReceiveResult receivedData = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), sendToken.Token);
                     await ReceiveData(buffer, receivedData);
                 }
                 //when twaiting is interrupted by a command to send data 
                 catch (OperationCanceledException)
                 {
+                    if (socket.State != WebSocketState.Open)
+                    {
+                        Console.WriteLine("Uh ohhh");
+                    }
                     sendToken = new CancellationTokenSource();
+                    await SendPacket();
                     break;
                 }
             }
         }
 
-        public void ActivateToken()
+        public void GoToSendMessage(object message)
         {
+            plantedMessage = message;
             sendToken.Cancel();
         }
     }

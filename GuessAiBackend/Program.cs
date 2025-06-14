@@ -4,6 +4,8 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.VisualBasic;
 using Classes;
+using System.Diagnostics;
+using System.Security.Cryptography.X509Certificates;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,9 +32,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseWebSockets();
-
-LinkedList<ClientWebSocket> sockets;
-Dictionary<Player, LinkedListNode<ClientWebSocket>> socketPlayerMapping;
 
 //app.Use is a way to add middleware.
 app.Use(async (context, next) =>
@@ -75,6 +74,62 @@ app.MapGet("/test", () =>
         success = true,
         message = returnMessage
     });
+});
+
+_ = Task.Run(async () =>
+{
+    Stopwatch stopwatch = new Stopwatch();
+    while (true)
+    {
+        try
+        {
+            //chheck if the queue is enough that we can pull them now
+            if (Globals.oneBotQueue.GetQueueSize() >= 2)
+            {
+                //first, check if the stopwatch has been started already
+                if (stopwatch.IsRunning)
+                {
+                    if (stopwatch.ElapsedMilliseconds > 500)
+                    {
+                        stopwatch.Stop();
+                        //now take them outta the queue, give them the message
+                        (bool success, String message, Player[] players) = Globals.oneBotQueue.GetPlayersForMatch();
+                        if (success)
+                        {
+                            //for each player, find the socket its associated with and tell it to send a message
+                            for (byte i = 0; i < players.Length; i++)
+                            {
+                                SocketHandler theSocket = Globals.socketPlayerMapping[players[i]];
+
+                                object sentMessage = new
+                                {
+                                    success = true,
+                                    message ="Game Starting!"
+                                };
+                                theSocket.GoToSendMessage(sentMessage);
+                                Globals.socketPlayerMapping.Remove(players[i]);
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Error getting players for a match: {message}.");
+                        }
+                    }
+                }
+                else
+                {
+                    stopwatch.Restart();
+                }
+            }
+        }
+        catch (Exception err)
+        {
+            Console.WriteLine($"An error occured while getting players and stuff from the queue: {err}.");
+            break;
+        }
+        await Task.Yield();
+
+    }
 });
 
 app.Run();
