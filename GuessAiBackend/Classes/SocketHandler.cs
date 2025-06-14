@@ -4,22 +4,21 @@ using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 using Microsoft.VisualBasic;
 
 namespace Classes
 {
     public class SocketHandler
     {
-        public WebSocket socket;
-        public CancellationTokenSource sendToken;
-        public object plantedMessage;
+        private WebSocket socket;
+        private object plantedMessage;
 
-        public Player? ourPlayer;
+        private Player? ourPlayer;
 
         public SocketHandler(WebSocket theSocket)
         {
             socket = theSocket;
-            sendToken = new CancellationTokenSource();
         }
 
         async public Task SendPacket()
@@ -27,10 +26,11 @@ namespace Classes
             string jsonMessage = JsonSerializer.Serialize(plantedMessage);
             var bufferMessage = Encoding.UTF8.GetBytes(jsonMessage);
             await socket.SendAsync(new ArraySegment<byte>(bufferMessage), WebSocketMessageType.Text, true, CancellationToken.None);
+            Console.WriteLine("Message Sent!");
             plantedMessage = null;
         }
 
-        async public Task ReceiveData(byte[] buffer, WebSocketReceiveResult receivedData)
+        async public Task ProcessReceivedData(byte[] buffer, WebSocketReceiveResult receivedData)
         {
             //should be sending text as first message
             if (receivedData.MessageType == WebSocketMessageType.Text)
@@ -42,6 +42,7 @@ namespace Classes
                 if (messageData == null)
                 {
                     await socket.CloseAsync(WebSocketCloseStatus.InvalidPayloadData, "error deseralizing json", CancellationToken.None);
+                    return;
                 }
                 bool success = false;
                 String message = "";
@@ -115,27 +116,21 @@ namespace Classes
                 //array segment is just way to specify where to write in the buffer, by default index 0 is start and count is end of array
                 try
                 {
-                    WebSocketReceiveResult receivedData = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), sendToken.Token);
-                    await ReceiveData(buffer, receivedData);
+                    WebSocketReceiveResult receivedData = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                    await ProcessReceivedData(buffer, receivedData);
                 }
                 //when twaiting is interrupted by a command to send data 
                 catch (OperationCanceledException)
                 {
-                    if (socket.State != WebSocketState.Open)
-                    {
-                        Console.WriteLine("Uh ohhh");
-                    }
-                    sendToken = new CancellationTokenSource();
-                    await SendPacket();
                     break;
                 }
             }
         }
 
-        public void GoToSendMessage(object message)
+        public async Task GoToSendMessage(object message)
         {
             plantedMessage = message;
-            sendToken.Cancel();
+            await SendPacket();
         }
     }
 }

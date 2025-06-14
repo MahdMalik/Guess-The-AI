@@ -101,7 +101,8 @@ export default function Home() {
                         if(data.success && data.message == "Game Starting!")
                         {
                             alert("Game Starting, Enough Players!");
-                            window.location.href = "/Match";
+                            socket.current.close()
+                            window.location.href = "/match";
                         }
                         else
                         {

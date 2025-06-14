@@ -46,6 +46,7 @@ app.Use(async (context, next) =>
             //this will be our buffer
             SocketHandler newSocket = new SocketHandler(socket);
             await newSocket.HandleSocket();
+            Console.WriteLine("Ended connection!");
         }
         //if not, don't want to connect so give them an error
         else
@@ -100,6 +101,7 @@ _ = Task.Run(async () =>
                             for (byte i = 0; i < players.Length; i++)
                             {
                                 SocketHandler theSocket = Globals.socketPlayerMapping[players[i]];
+                                Globals.socketPlayerMapping.Remove(players[i]);
 
                                 object sentMessage = new
                                 {
@@ -107,7 +109,6 @@ _ = Task.Run(async () =>
                                     message ="Game Starting!"
                                 };
                                 theSocket.GoToSendMessage(sentMessage);
-                                Globals.socketPlayerMapping.Remove(players[i]);
                             }
                         }
                         else
