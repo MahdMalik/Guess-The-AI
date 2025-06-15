@@ -85,7 +85,7 @@ _ = Task.Run(async () =>
         try
         {
             //chheck if the queue is enough that we can pull them now
-            if (Globals.oneBotQueue.GetQueueSize() >= 2)
+            if (Globals.oneBotQueue.GetQueueSize() >= Globals.oneBotQueue.GetPlayersPerMatch())
             {
                 //first, check if the stopwatch has been started already
                 if (stopwatch.IsRunning)
@@ -97,6 +97,7 @@ _ = Task.Run(async () =>
                         (bool success, String message, Player[] players) = Globals.oneBotQueue.GetPlayersForMatch();
                         if (success)
                         {
+                            Console.WriteLine("Alright, let's start the game!");
                             //for each player, find the socket its associated with and tell it to send a message
                             for (byte i = 0; i < players.Length; i++)
                             {
@@ -106,7 +107,8 @@ _ = Task.Run(async () =>
                                 object sentMessage = new
                                 {
                                     success = true,
-                                    message ="Game Starting!"
+                                    message = "Game Starting!",
+                                    type = "Server Event"
                                 };
                                 theSocket.GoToSendMessage(sentMessage);
                             }

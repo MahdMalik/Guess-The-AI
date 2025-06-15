@@ -69,7 +69,8 @@ namespace Classes
                         plantedMessage = new
                         {
                             success = success,
-                            message = message
+                            message = message,
+                            type = "Confirmation"
                         };
                         await SendPacket();
                         break;
@@ -92,7 +93,8 @@ namespace Classes
                         plantedMessage = new
                         {
                             success = success,
-                            message = message
+                            message = message,
+                            type = "Confirmation"
                         };
                         await SendPacket();
                         break;
@@ -130,7 +132,7 @@ namespace Classes
         public async Task GoToSendMessage(object message)
         {
             plantedMessage = message;
-            await SendPacket();
+            SendPacket();
         }
     }
 }
