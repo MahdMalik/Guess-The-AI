@@ -1,3 +1,8 @@
+# Guess-the-AI project 25'
+
+A summer 2025 project for utd students
+guess an AI in game.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
