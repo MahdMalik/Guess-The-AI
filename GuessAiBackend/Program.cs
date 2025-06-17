@@ -98,6 +98,9 @@ _ = Task.Run(async () =>
                         if (success)
                         {
                             Console.WriteLine("Alright, let's start the game!");
+                            Match newMatch = new Match(players, "One Bot Game");
+                            String matchHash = newMatch.GetHash();
+                            Globals.matches.Add(matchHash, newMatch);
                             //for each player, find the socket its associated with and tell it to send a message
                             for (byte i = 0; i < players.Length; i++)
                             {
@@ -108,10 +111,12 @@ _ = Task.Run(async () =>
                                 {
                                     success = true,
                                     message = "Game Starting!",
-                                    type = "Server Event"
+                                    type = "Server Event",
+                                    server_id = matchHash
                                 };
                                 theSocket.GoToSendMessage(sentMessage);
                             }
+                            newMatch.RunTalk();
                         }
                         else
                         {
