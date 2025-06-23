@@ -94,7 +94,7 @@ _ = Task.Run(async () =>
                     {
                         stopwatch.Stop();
                         //now take them outta the queue, give them the message
-                        (bool success, String message, Player[] players) = Globals.oneBotQueue.GetPlayersForMatch();
+                        (bool success, String message, LinkedList<Player> players) = Globals.oneBotQueue.GetPlayersForMatch();
                         if (success)
                         {
                             Console.WriteLine("Alright, let's start the game!");
@@ -102,10 +102,10 @@ _ = Task.Run(async () =>
                             String matchHash = newMatch.GetHash();
                             Globals.matches.Add(matchHash, newMatch);
                             //for each player, find the socket its associated with and tell it to send a message
-                            for (byte i = 0; i < players.Length; i++)
+                            foreach(Player plr in players)
                             {
-                                SocketHandler theSocket = Globals.socketPlayerMapping[players[i]];
-                                Globals.socketPlayerMapping.Remove(players[i]);
+                                SocketHandler theSocket = Globals.socketPlayerMapping[plr];
+                                Globals.socketPlayerMapping.Remove(plr);
 
                                 object sentMessage = new
                                 {
