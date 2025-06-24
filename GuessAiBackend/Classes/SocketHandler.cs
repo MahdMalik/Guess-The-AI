@@ -32,7 +32,7 @@ namespace Classes
 
         async public Task ProcessReceivedData(byte[] buffer, WebSocketReceiveResult receivedData)
         {
-            //should be sending text as first message
+            //should be sending text obviosuly
             if (receivedData.MessageType == WebSocketMessageType.Text)
             {
                 //first convert bytes to json
@@ -52,6 +52,7 @@ namespace Classes
                     case "Join Queue":
                         //first, create our player, then put them into the queue
                         ourPlayer = new Player(messageData.username);
+                        Globals.playerMapping.Add(ourPlayer.GetName(), ourPlayer);
                         switch (messageData.queueType)
                         {
                             case "One Bot Game":
@@ -89,6 +90,31 @@ namespace Classes
                             //have to remove our player from here as well
                             Globals.socketPlayerMapping.Remove(ourPlayer);
                             message += ", removed player: " + ourPlayer.GetName();
+                        }
+                        plantedMessage = new
+                        {
+                            success = success,
+                            message = message,
+                            type = "Confirmation"
+                        };
+                        await SendPacket();
+                        break;
+                    case "Join Match":
+                        if (messageData.server_id == null)
+                        {
+                            message = "No hash ID given!";
+                        }
+                        else
+                        {
+                            if (Globals.matches.TryGetValue(messageData.server_id, out Match theMatch))
+                            {
+                                theMatch.AddConnection();
+                                message = "Connected to the Match!";
+                            }
+                            else
+                            {
+                                message = "The Hash ID was not found!";
+                            }
                         }
                         plantedMessage = new
                         {

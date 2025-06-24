@@ -19,6 +19,8 @@ namespace Classes
 
         Stopwatch timer;
 
+        private byte numConnections;
+
         //how it works is each index corresponds to one more  than the current votes, so index 0 means 1 vote, at least
         //in the array. Then, each element in the array is a hashset of players who have that # of votes.
         private HashSet<String>[] votes;
@@ -30,6 +32,7 @@ namespace Classes
             votes = new HashSet<String>[thePlayers.Count];
             playerVoteMapping = new Dictionary<String, byte>();
             roundNumber = 0;
+            numConnections = 0;
             MAX_ROUND_NUM = (byte)(thePlayers.Count - 1);
             gamemode = theGamemode;
             messages = new List<MatchMessage>[MAX_ROUND_NUM];
@@ -100,7 +103,7 @@ namespace Classes
                 votes[playerVoteMapping[chosenUser]].Remove(chosenUser);
                 votes[playerVoteMapping[chosenUser] + 1].Add(chosenUser);
                 //then, update where they are found
-                playerVoteMapping[chosenUser] = (byte) (playerVoteMapping[chosenUser] + 1);
+                playerVoteMapping[chosenUser] = (byte)(playerVoteMapping[chosenUser] + 1);
             }
             else
             {
@@ -195,6 +198,26 @@ namespace Classes
         public String GetHash()
         {
             return hashCode;
+        }
+
+        public void AddConnection()
+        {
+            numConnections++;
+            if (numConnections == players.Count)
+            {
+                foreach (Player plr in players)
+                {
+                    SocketHandler associatedSocket = Globals.socketPlayerMapping[plr];
+                    object packet = new
+                    {
+                        message = "Game Start! Discussion First",
+                        type = "Server Event",
+                        server_id = hashCode
+                    };
+                    associatedSocket.GoToSendMessage(packet);
+                }
+                RunTalk();
+            }
         }
     }
 }
