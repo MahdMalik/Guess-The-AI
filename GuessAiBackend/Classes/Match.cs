@@ -49,7 +49,8 @@ namespace Classes
         {
             while (timer.ElapsedMilliseconds < 1000 * SEC_PER_ROUND)
             {
-                Task.Yield();
+                //yield back task to other places that may need it
+                await Task.Yield();
             }
             phase = "voting";
             foreach (Player plr in players)
@@ -202,6 +203,7 @@ namespace Classes
 
         public void AddConnection()
         {
+            Console.WriteLine("Match added connection!");
             numConnections++;
             if (numConnections == players.Count)
             {

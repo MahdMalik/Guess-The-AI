@@ -100,6 +100,11 @@ namespace Classes
                         await SendPacket();
                         break;
                     case "Join Match":
+                        //since this is now a new socket handler object, gotta redo the ourPlayer
+                        ourPlayer = Globals.playerMapping[messageData.username];
+                        //and now, change the socket dictionary to reflect this too
+                        Globals.socketPlayerMapping.Add(ourPlayer, this);
+
                         if (messageData.server_id == null)
                         {
                             message = "No hash ID given!";

@@ -53,6 +53,7 @@ export class Sockets
         }
         this.socket.send(JSON.stringify(obj))
         const data = await this.RetrieveConfirmationMessage()
+        console.log("Confirm received!")
         return data
     }
 
