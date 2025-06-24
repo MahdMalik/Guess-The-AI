@@ -60,7 +60,8 @@ namespace Classes
                 {
                     message = "Voting Time",
                     type = "Server Event",
-                    server_id = hashCode
+                    server_id = hashCode,
+                    success = true
                 };
                 associatedSocket.GoToSendMessage(packet);
             }
@@ -89,7 +90,8 @@ namespace Classes
                     message = message,
                     type = "Message Arrived",
                     server_id = hashCode,
-                    sender = sendingUser
+                    sender = sendingUser,
+                    success = true
                 };
                 associatedSocket.GoToSendMessage(packet);
             }
@@ -118,7 +120,7 @@ namespace Classes
             timer.Restart();
             while (timer.ElapsedMilliseconds < 1000 * SEC_PER_VOTE)
             {
-                Task.Yield();
+                await Task.Yield();
             }
             phase = "talking";
 
@@ -149,7 +151,8 @@ namespace Classes
                     voted_person = votedUser,
                     winner = "Players Win!",
                     type = "Server Event",
-                    server_id = hashCode
+                    server_id = hashCode,
+                    success = true
                 };
             }
             else
@@ -159,7 +162,8 @@ namespace Classes
                     message = "Discussion Time",
                     voted_person = votedUser,
                     type = "Server Event",
-                    server_id = hashCode
+                    server_id = hashCode,
+                    success = true
                 };
             }
 
@@ -172,7 +176,8 @@ namespace Classes
                     {
                         message = "Voted Out",
                         type = "Server Event",
-                        server_id = hashCode
+                        server_id = hashCode,
+                        success = true
                     };
                     players.Remove(plr);
                 }
@@ -207,6 +212,7 @@ namespace Classes
             numConnections++;
             if (numConnections == players.Count)
             {
+                Console.WriteLine("We are Ready!");
                 foreach (Player plr in players)
                 {
                     SocketHandler associatedSocket = Globals.socketPlayerMapping[plr];
@@ -214,7 +220,8 @@ namespace Classes
                     {
                         message = "Game Start! Discussion First",
                         type = "Server Event",
-                        server_id = hashCode
+                        server_id = hashCode,
+                        success = true
                     };
                     associatedSocket.GoToSendMessage(packet);
                 }

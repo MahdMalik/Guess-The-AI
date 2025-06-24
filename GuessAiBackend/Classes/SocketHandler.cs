@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Xml;
 using Microsoft.VisualBasic;
 
 namespace Classes
@@ -105,6 +106,37 @@ namespace Classes
                         //and now, change the socket dictionary to reflect this too
                         Globals.socketPlayerMapping.Add(ourPlayer, this);
 
+                        Match ourMatch = null;
+                        if (messageData.server_id == null)
+                        {
+                            message = "No hash ID given!";
+                        }
+                        else
+                        {
+                            if (Globals.matches.TryGetValue(messageData.server_id, out ourMatch))
+                            {
+                                message = "Connected to the Match!";
+                                success = true;
+                            }
+                            else
+                            {
+                                message = "The Hash ID was not found!";
+                            }
+                        }
+                        plantedMessage = new
+                        {
+                            success = success,
+                            message = message,
+                            type = "Confirmation"
+                        };
+                        await SendPacket();
+                        //this way, we first send the confirmation method first, even if say this is the last client to connect and thus the match should start
+                        if (success)
+                        {
+                            ourMatch.AddConnection();
+                        }
+                        break;
+                    case "New Message":
                         if (messageData.server_id == null)
                         {
                             message = "No hash ID given!";
@@ -113,8 +145,8 @@ namespace Classes
                         {
                             if (Globals.matches.TryGetValue(messageData.server_id, out Match theMatch))
                             {
-                                theMatch.AddConnection();
-                                message = "Connected to the Match!";
+                                theMatch.SendOutNewMessage(messageData.username, messageData.saidMessage);
+                                message = "Message Sent Successfully!";
                             }
                             else
                             {
