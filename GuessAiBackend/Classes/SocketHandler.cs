@@ -1,10 +1,12 @@
 using System.Data;
+using System.Diagnostics.Eventing.Reader;
 using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Xml;
 using Microsoft.VisualBasic;
 
 namespace Classes
@@ -32,8 +34,14 @@ namespace Classes
 
         async public Task ProcessReceivedData(byte[] buffer, WebSocketReceiveResult receivedData)
         {
-            //should be sending text as first message
-            if (receivedData.MessageType == WebSocketMessageType.Text)
+            //should be sending text obviosuly
+            if (receivedData.CloseStatus != null && receivedData.CloseStatusDescription == "Finished Match")
+            {
+                Console.WriteLine("Client closed connection this time!");
+                Globals.socketPlayerMapping.Remove(ourPlayer);
+                Globals.playerMapping.Remove(ourPlayer.GetName());
+            }
+            else if (receivedData.MessageType == WebSocketMessageType.Text)
             {
                 //first convert bytes to json
                 string jsonData = Encoding.UTF8.GetString(buffer, 0, receivedData.Count);
@@ -46,12 +54,14 @@ namespace Classes
                 }
                 bool success = false;
                 String message = "";
+                Match ourMatch = null;
                 switch (messageData.messageType)
                 {
                     //if the message is to join a queue, do this:
                     case "Join Queue":
                         //first, create our player, then put them into the queue
                         ourPlayer = new Player(messageData.username);
+                        Globals.playerMapping.Add(ourPlayer.GetName(), ourPlayer);
                         switch (messageData.queueType)
                         {
                             case "One Bot Game":
@@ -88,6 +98,7 @@ namespace Classes
                         {
                             //have to remove our player from here as well
                             Globals.socketPlayerMapping.Remove(ourPlayer);
+                            Globals.playerMapping.Remove(ourPlayer.GetName());
                             message += ", removed player: " + ourPlayer.GetName();
                         }
                         plantedMessage = new
@@ -97,6 +108,98 @@ namespace Classes
                             type = "Confirmation"
                         };
                         await SendPacket();
+                        break;
+                    case "Join Match":
+                        //since this is now a new socket handler object, gotta redo the ourPlayer
+                        ourPlayer = Globals.playerMapping[messageData.username];
+                        //and now, change the socket dictionary to reflect this too
+                        Globals.socketPlayerMapping.Add(ourPlayer, this);
+                        if (messageData.server_id == null)
+                        {
+                            message = "No hash ID given!";
+                        }
+                        else
+                        {
+                            if (Globals.matches.TryGetValue(messageData.server_id, out ourMatch))
+                            {
+                                message = "Connected to the Match!";
+                                success = true;
+                            }
+                            else
+                            {
+                                message = "The Hash ID was not found!";
+                            }
+                        }
+                        plantedMessage = new
+                        {
+                            success = success,
+                            message = message,
+                            type = "Confirmation"
+                        };
+                        await SendPacket();
+                        //this way, we first send the confirmation method first, even if say this is the last client to connect and thus the match should start
+                        if (success)
+                        {
+                            ourMatch.AddConnection();
+                        }
+                        break;
+                    case "New Message":
+                        if (messageData.server_id == null)
+                        {
+                            message = "No hash ID given!";
+                        }
+                        else
+                        {
+                            if (Globals.matches.TryGetValue(messageData.server_id, out ourMatch))
+                            {
+                                success = true;
+                                message = "Message Sent Successfully!";
+                            }
+                            else
+                            {
+                                message = "The Hash ID was not found!";
+                            }
+                        }
+                        plantedMessage = new
+                        {
+                            success = success,
+                            message = message,
+                            type = "Confirmation"
+                        };
+                        await SendPacket();
+                        if (success)
+                        {
+                            ourMatch.SendOutNewMessage(messageData.username, messageData.saidMessage);
+                        }
+                        break;
+                    case "Add Vote":
+                        if (messageData.server_id == null)
+                        {
+                            message = "No hash ID given!";
+                        }
+                        else
+                        {
+                            if (Globals.matches.TryGetValue(messageData.server_id, out ourMatch))
+                            {
+                                success = true;
+                                message = "Voted Successfully!";
+                            }
+                            else
+                            {
+                                message = "The Hash ID was not found!";
+                            }
+                        }
+                        plantedMessage = new
+                        {
+                            success = success,
+                            message = message,
+                            type = "Confirmation"
+                        };
+                        await SendPacket();
+                        if (success)
+                        {
+                            ourMatch.ReceiveVote(messageData.votedPerson);
+                        }
                         break;
                     default:
                         await socket.CloseAsync(WebSocketCloseStatus.InvalidPayloadData, "message type wasn't found", CancellationToken.None);

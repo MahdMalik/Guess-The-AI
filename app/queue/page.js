@@ -14,6 +14,7 @@ export default function Home() {
         {
             alert("GAME STARTING!!")
             socket.current.socket.removeEventListener("message", socket.current.MessageListener)
+            sessionStorage.setItem("server_id", data.server_id)
             window.location.href = "/match"
         }
     }
@@ -43,7 +44,7 @@ export default function Home() {
         //means have to start connection
         else
         {
-            socket.current = new Sockets(username, OnMessageFunction)
+            socket.current = new Sockets(username, OnMessageFunction, null, "Queue")
             const success = await socket.current.CreateSocket("Join Queue", "One Bot Game")
             if(success)
             {
