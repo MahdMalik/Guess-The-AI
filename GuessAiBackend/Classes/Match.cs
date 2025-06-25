@@ -14,7 +14,7 @@ namespace Classes
 
         private String hashCode;
 
-        private const byte SEC_PER_ROUND = 5;
+        private const byte SEC_PER_ROUND = 15;
         private const byte SEC_PER_VOTE = 15;
 
         Stopwatch timer;
@@ -30,12 +30,20 @@ namespace Classes
         {
             players = thePlayers;
             votes = new HashSet<String>[thePlayers.Count];
+            for (byte i = 0; i < votes.Length; i++)
+            {
+                votes[i] = new HashSet<string>();
+            }
             playerVoteMapping = new Dictionary<String, byte>();
             roundNumber = 0;
             numConnections = 0;
             MAX_ROUND_NUM = (byte)(thePlayers.Count - 1);
             gamemode = theGamemode;
             messages = new List<MatchMessage>[MAX_ROUND_NUM];
+            for (byte i = 0; i < messages.Length; i++)
+            {
+                messages[i] = new List<MatchMessage>();
+            }
             phase = "talking";
             timer = new Stopwatch();
             timer.Start();
@@ -113,6 +121,7 @@ namespace Classes
                 votes[0].Add(chosenUser);
                 playerVoteMapping.Add(chosenUser, 0);
             }
+            Console.WriteLine("Vote Added!");
         }
 
         public async Task RunVoting()
@@ -144,6 +153,7 @@ namespace Classes
             if (roundNumber == MAX_ROUND_NUM)
             {
                 //end game!
+                Console.WriteLine("Game has ended now!");
                 gameOver = true;
                 nonVotedPacket = new
                 {
@@ -167,9 +177,11 @@ namespace Classes
                 };
             }
 
-            foreach (Player plr in players)
+            LinkedListNode<Player> plrNode = players.First;
+            while (plrNode != null)
             {
-                if (plr.GetName() == votedUser)
+                LinkedListNode<Player> nextNode = plrNode.Next;
+                if (plrNode.Value.GetName() == votedUser)
                 {
                     //kick them out
                     packet = new
@@ -179,20 +191,25 @@ namespace Classes
                         server_id = hashCode,
                         success = true
                     };
-                    players.Remove(plr);
+                    players.Remove(plrNode);
                 }
                 else
                 {
                     packet = nonVotedPacket;
                 }
 
-                SocketHandler associatedSocket = Globals.socketPlayerMapping[plr];
+                SocketHandler associatedSocket = Globals.socketPlayerMapping[plrNode.Value];
                 associatedSocket.GoToSendMessage(packet);
+                plrNode = nextNode;
             }
 
             //reset our voting objects
             votes = new HashSet<String>[players.Count];
             playerVoteMapping = new Dictionary<String, byte>();
+            for (byte i = 0; i < votes.Length; i++)
+            {
+                votes[i] = new HashSet<string>();
+            }
 
             //if the game's not over, go back to discussion method
             if (!gameOver)

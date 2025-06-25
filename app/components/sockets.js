@@ -34,6 +34,7 @@ export class Sockets
     async ListenForMessages()
     {
         this.MessageListener = (response) => {
+            console.log(response)
             const data = JSON.parse(response.data)
             if(data.type != "Confirmation" && data.success)
             {

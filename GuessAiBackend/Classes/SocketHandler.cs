@@ -47,6 +47,7 @@ namespace Classes
                 }
                 bool success = false;
                 String message = "";
+                Match ourMatch = null;
                 switch (messageData.messageType)
                 {
                     //if the message is to join a queue, do this:
@@ -90,6 +91,7 @@ namespace Classes
                         {
                             //have to remove our player from here as well
                             Globals.socketPlayerMapping.Remove(ourPlayer);
+                            Globals.playerMapping.Remove(ourPlayer.GetName());
                             message += ", removed player: " + ourPlayer.GetName();
                         }
                         plantedMessage = new
@@ -105,8 +107,6 @@ namespace Classes
                         ourPlayer = Globals.playerMapping[messageData.username];
                         //and now, change the socket dictionary to reflect this too
                         Globals.socketPlayerMapping.Add(ourPlayer, this);
-
-                        Match ourMatch = null;
                         if (messageData.server_id == null)
                         {
                             message = "No hash ID given!";
@@ -143,9 +143,9 @@ namespace Classes
                         }
                         else
                         {
-                            if (Globals.matches.TryGetValue(messageData.server_id, out Match theMatch))
+                            if (Globals.matches.TryGetValue(messageData.server_id, out ourMatch))
                             {
-                                theMatch.SendOutNewMessage(messageData.username, messageData.saidMessage);
+                                success = true;
                                 message = "Message Sent Successfully!";
                             }
                             else
@@ -160,6 +160,39 @@ namespace Classes
                             type = "Confirmation"
                         };
                         await SendPacket();
+                        if (success)
+                        {
+                            ourMatch.SendOutNewMessage(messageData.username, messageData.saidMessage);
+                        }
+                        break;
+                    case "Add Vote":
+                        if (messageData.server_id == null)
+                        {
+                            message = "No hash ID given!";
+                        }
+                        else
+                        {
+                            if (Globals.matches.TryGetValue(messageData.server_id, out ourMatch))
+                            {
+                                success = true;
+                                message = "Voted Successfully!";
+                            }
+                            else
+                            {
+                                message = "The Hash ID was not found!";
+                            }
+                        }
+                        plantedMessage = new
+                        {
+                            success = success,
+                            message = message,
+                            type = "Confirmation"
+                        };
+                        await SendPacket();
+                        if (success)
+                        {
+                            ourMatch.ReceiveVote(messageData.votedPerson);
+                        }
                         break;
                     default:
                         await socket.CloseAsync(WebSocketCloseStatus.InvalidPayloadData, "message type wasn't found", CancellationToken.None);
