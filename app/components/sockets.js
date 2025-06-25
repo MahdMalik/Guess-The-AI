@@ -1,12 +1,14 @@
 export class Sockets
 {
-    constructor(username, OnMessageFunction)
+    constructor(username, OnMessageFunction, server_id, connection_type)
     {
         this.socket = null;
         this.status = "Closed"
         this.username = username
         this.MessageListener = null
         this.OnMessageFunction = OnMessageFunction
+        this.server_id = server_id
+        this.connection_type = connection_type
     }
 
     //helper function to await getting am essage from the server through promises
@@ -32,6 +34,7 @@ export class Sockets
     async ListenForMessages()
     {
         this.MessageListener = (response) => {
+            console.log(response)
             const data = JSON.parse(response.data)
             if(data.type != "Confirmation" && data.success)
             {
@@ -44,8 +47,14 @@ export class Sockets
 
     async SendData(obj)
     {
+        //if we got the server id, want to send it as well
+        if(this.server_id != null)
+        {
+            obj = {...obj, server_id: this.server_id}
+        }
         this.socket.send(JSON.stringify(obj))
         const data = await this.RetrieveConfirmationMessage()
+        console.log("Confirm received!")
         return data
     }
 

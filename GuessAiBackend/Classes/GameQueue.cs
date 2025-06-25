@@ -78,10 +78,10 @@ namespace Classes
         }
 
         //removes the players from the start of the queue to start the game
-        public (bool success, String message, Player[] playersInMatch) GetPlayersForMatch()
+        public (bool success, String message, LinkedList<Player> playersInMatch) GetPlayersForMatch()
         {
             //set up returned array
-            Player[] returnedPlayers = new Player[playersPerMatch];
+            LinkedList<Player> returnedPlayers = new LinkedList<Player>();
             //use for loop to add each player
             for (byte i = 0; i < playersPerMatch; i++)
             {
@@ -90,7 +90,7 @@ namespace Classes
                 //if it worked, add them to the array
                 if (removeResult.success)
                 {
-                    returnedPlayers[i] = removeResult.removedPlayer;
+                    returnedPlayers.AddLast(removeResult.removedPlayer);
                 }
                 //if it didn't work, add them back to the start of the queue
                 else
@@ -99,7 +99,8 @@ namespace Classes
                     //player, since there was an error returned, they weren't even removed
                     for (sbyte j = (sbyte)(i - 1); j >= 0; j--)
                     {
-                        AddPlayer(returnedPlayers[j], true);
+                        AddPlayer(returnedPlayers.Last.Value, true);
+                        returnedPlayers.RemoveLast();
                     }
                     return (false, "failed to remove a player: " + removeResult.message, null);
                 }
