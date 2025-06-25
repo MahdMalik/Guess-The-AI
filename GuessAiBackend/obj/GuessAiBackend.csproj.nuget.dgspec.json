@@ -1,31 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Saad\\Programming\\UTD Summer 2025 Projects\\Guess-The-AI\\GuessAiBackend\\GuessAiBackend.csproj": {}
+    "C:\\Users\\mahd\\Documents\\guess-the-ai\\GuessAiBackend\\GuessAiBackend.csproj": {}
   },
   "projects": {
-    "C:\\Saad\\Programming\\UTD Summer 2025 Projects\\Guess-The-AI\\GuessAiBackend\\GuessAiBackend.csproj": {
+    "C:\\Users\\mahd\\Documents\\guess-the-ai\\GuessAiBackend\\GuessAiBackend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Saad\\Programming\\UTD Summer 2025 Projects\\Guess-The-AI\\GuessAiBackend\\GuessAiBackend.csproj",
+        "projectUniqueName": "C:\\Users\\mahd\\Documents\\guess-the-ai\\GuessAiBackend\\GuessAiBackend.csproj",
         "projectName": "GuessAiBackend",
-        "projectPath": "C:\\Saad\\Programming\\UTD Summer 2025 Projects\\Guess-The-AI\\GuessAiBackend\\GuessAiBackend.csproj",
-        "packagesPath": "C:\\Users\\ashraful\\.nuget\\packages\\",
-        "outputPath": "C:\\Saad\\Programming\\UTD Summer 2025 Projects\\Guess-The-AI\\GuessAiBackend\\obj\\",
+        "projectPath": "C:\\Users\\mahd\\Documents\\guess-the-ai\\GuessAiBackend\\GuessAiBackend.csproj",
+        "packagesPath": "C:\\Users\\mahd\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\mahd\\Documents\\guess-the-ai\\GuessAiBackend\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\ashraful\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "C:\\Users\\mahd\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -44,7 +38,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.200"
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net9.0": {
@@ -53,6 +47,10 @@
             "Microsoft.AspNetCore.OpenApi": {
               "target": "Package",
               "version": "[9.0.5, )"
+            },
+            "NSwag.AspNetCore": {
+              "target": "Package",
+              "version": "[14.4.0, )"
             }
           },
           "imports": [
@@ -74,7 +72,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.203/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

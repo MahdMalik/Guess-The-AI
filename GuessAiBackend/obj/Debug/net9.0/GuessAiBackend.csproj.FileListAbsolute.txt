@@ -27,3 +27,16 @@ C:\Users\mahd\Documents\guess-the-ai\GuessAiBackend\obj\Debug\net9.0\refint\Gues
 C:\Users\mahd\Documents\guess-the-ai\GuessAiBackend\obj\Debug\net9.0\GuessAiBackend.pdb
 C:\Users\mahd\Documents\guess-the-ai\GuessAiBackend\obj\Debug\net9.0\GuessAiBackend.genruntimeconfig.cache
 C:\Users\mahd\Documents\guess-the-ai\GuessAiBackend\obj\Debug\net9.0\ref\GuessAiBackend.dll
+C:\Users\mahd\Documents\guess-the-ai\GuessAiBackend\bin\Debug\net9.0\Namotion.Reflection.dll
+C:\Users\mahd\Documents\guess-the-ai\GuessAiBackend\bin\Debug\net9.0\Newtonsoft.Json.dll
+C:\Users\mahd\Documents\guess-the-ai\GuessAiBackend\bin\Debug\net9.0\NJsonSchema.dll
+C:\Users\mahd\Documents\guess-the-ai\GuessAiBackend\bin\Debug\net9.0\NJsonSchema.Annotations.dll
+C:\Users\mahd\Documents\guess-the-ai\GuessAiBackend\bin\Debug\net9.0\NJsonSchema.NewtonsoftJson.dll
+C:\Users\mahd\Documents\guess-the-ai\GuessAiBackend\bin\Debug\net9.0\NJsonSchema.Yaml.dll
+C:\Users\mahd\Documents\guess-the-ai\GuessAiBackend\bin\Debug\net9.0\NSwag.Annotations.dll
+C:\Users\mahd\Documents\guess-the-ai\GuessAiBackend\bin\Debug\net9.0\NSwag.AspNetCore.dll
+C:\Users\mahd\Documents\guess-the-ai\GuessAiBackend\bin\Debug\net9.0\NSwag.Core.dll
+C:\Users\mahd\Documents\guess-the-ai\GuessAiBackend\bin\Debug\net9.0\NSwag.Core.Yaml.dll
+C:\Users\mahd\Documents\guess-the-ai\GuessAiBackend\bin\Debug\net9.0\NSwag.Generation.dll
+C:\Users\mahd\Documents\guess-the-ai\GuessAiBackend\bin\Debug\net9.0\NSwag.Generation.AspNetCore.dll
+C:\Users\mahd\Documents\guess-the-ai\GuessAiBackend\bin\Debug\net9.0\YamlDotNet.dll
