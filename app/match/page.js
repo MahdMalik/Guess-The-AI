@@ -44,12 +44,15 @@ export default function Home() {
         {
             alert("LMAO YOU GOT VOTED OUT BUM!")
             socket.current.socket.removeEventListener("message", socket.current.MessageListener)
-            socket.current.socket.close(1000, "Done")
+            socket.current.socket.close(1000, "Finished Match")
             window.location.href = "/queue"
         }
         else if(data.message == "Game Over")
         {
             alert("Game is over now! Winner: " + data.winner + "! Oh yeah last person voted out was: " + data.voted_person)
+            socket.current.socket.removeEventListener("message", socket.current.MessageListener)
+            socket.current.socket.close(1000, "Finished Match")
+            window.location.href = "/queue"
         }
     }
 

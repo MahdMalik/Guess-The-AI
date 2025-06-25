@@ -1,4 +1,5 @@
 using System.Data;
+using System.Diagnostics.Eventing.Reader;
 using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
@@ -34,7 +35,13 @@ namespace Classes
         async public Task ProcessReceivedData(byte[] buffer, WebSocketReceiveResult receivedData)
         {
             //should be sending text obviosuly
-            if (receivedData.MessageType == WebSocketMessageType.Text)
+            if (receivedData.CloseStatus != null && receivedData.CloseStatusDescription == "Finished Match")
+            {
+                Console.WriteLine("Client closed connection this time!");
+                Globals.socketPlayerMapping.Remove(ourPlayer);
+                Globals.playerMapping.Remove(ourPlayer.GetName());
+            }
+            else if (receivedData.MessageType == WebSocketMessageType.Text)
             {
                 //first convert bytes to json
                 string jsonData = Encoding.UTF8.GetString(buffer, 0, receivedData.Count);
