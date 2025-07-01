@@ -69,14 +69,14 @@ export class Sockets
                 messageType: messageType,
                 queueType: queueType
             }
-            await this.SendData(obj)
+            const result = await this.SendData(obj)
             this.ListenForMessages();
-            return true
+            return result
         }
         catch(e)
         {
             alert("Unable to make connection: " + e)
-            return false
+            return {result: false, packet: null}
         }
 
     }

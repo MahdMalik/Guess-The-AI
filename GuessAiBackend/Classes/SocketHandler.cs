@@ -114,6 +114,7 @@ namespace Classes
                         ourPlayer = Globals.playerMapping[messageData.username];
                         //and now, change the socket dictionary to reflect this too
                         Globals.socketPlayerMapping.Add(ourPlayer, this);
+                        String[] playerNames = null;
                         if (messageData.server_id == null)
                         {
                             message = "No hash ID given!";
@@ -124,6 +125,7 @@ namespace Classes
                             {
                                 message = "Connected to the Match!";
                                 success = true;
+                                playerNames = ourMatch.ReturnPlayers();
                             }
                             else
                             {
@@ -134,7 +136,8 @@ namespace Classes
                         {
                             success = success,
                             message = message,
-                            type = "Confirmation"
+                            type = "Confirmation",
+                            names = playerNames
                         };
                         await SendPacket();
                         //this way, we first send the confirmation method first, even if say this is the last client to connect and thus the match should start

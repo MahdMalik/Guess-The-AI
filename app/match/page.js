@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState, useRef } from "react";
 import { Sockets } from "../components/sockets";
-import { Button, Stack } from "@mui/material";
+import { Button, Stack, Box } from "@mui/material";
 
 export default function Home() {
     const socket = useRef(null);
@@ -10,6 +10,7 @@ export default function Home() {
     const [gameStarted, setStart] = useState(false)
     const [messages, setMessages] = useState([])
     const [mode, setMode] = useState("Discussion")
+    const [players, setPlayers] = useState([])
 
     const OnMessageFunction = async (data) => {
         //GAME START!
@@ -64,10 +65,13 @@ export default function Home() {
             //now, reset it back to what it once was    
             sessionStorage.setItem("server_id", "")
             socket.current = new Sockets(username, OnMessageFunction, hashId, "Match")
-            const success = await socket.current.CreateSocket("Join Match", "One Bot Game")
-            if(success)
+            const result = await socket.current.CreateSocket("Join Match", "One Bot Game")
+            //if there's something to parse...
+            if(result.success)
             {
                 console.log("Yippee!")
+                //should have sent the player list along here too:
+                setPlayers[[...result.names, username]]
             }
             else
             {
@@ -91,15 +95,20 @@ export default function Home() {
     return (<div>
         { gameStarted ? 
         (
-            <div>
-                <p>Game Start!</p>
-                {/* This way if it's in discussion, it'll provide the button to send another message */}
-                {mode == "Discussion" && <Button onClick={SendNewMessage}>Send A Message</Button>}
-                {messages.map((message, index) => 
-                    (<p key={index}>Message #{index + 1} by {message.name}: {message.message}</p>)
-                )}
-                {mode == "Voting" && <p>Voting now! You'll be voting yourself though lol.</p>}
-            </div>
+            <Box display="flex" alignItems = "flex-start">
+                <Box flex={1} p ={2}>
+                    <p>Game Start!</p>
+                    {/* This way if it's in discussion, it'll provide the button to send another message */}
+                    {mode == "Discussion" && <Button onClick={SendNewMessage}>Send A Message</Button>}
+                    {messages.map((message, index) => 
+                        (<p key={index}>Message #{index + 1} by {message.name}: {message.message}</p>)
+                    )}
+                    {mode == "Voting" && <p>Voting now! You'll be voting yourself though lol.</p>}
+                </Box>
+                <Sidebar>
+                    <p>HELP IN GAIA</p>
+                </Sidebar>
+            </Box>
            
         ) : 
         (
