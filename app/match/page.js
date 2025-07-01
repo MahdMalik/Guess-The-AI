@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState, useRef } from "react";
 import { Sockets } from "../components/sockets";
-import { Button, Stack, Box } from "@mui/material";
+import { Button, Stack, Box, Drawer, List, ListItem, ListItemText } from "@mui/material";
 
 export default function Home() {
     const socket = useRef(null);
@@ -71,7 +71,7 @@ export default function Home() {
             {
                 console.log("Yippee!")
                 //should have sent the player list along here too:
-                setPlayers[[...result.names, username]]
+                setPlayers(result.names)
             }
             else
             {
@@ -105,9 +105,19 @@ export default function Home() {
                     )}
                     {mode == "Voting" && <p>Voting now! You'll be voting yourself though lol.</p>}
                 </Box>
-                <Sidebar>
-                    <p>HELP IN GAIA</p>
-                </Sidebar>
+                <Drawer
+                    variant="permanent"
+                    anchor="right"
+                    sx={{
+                    width: 240,
+                    flexShrink: 0,
+                    [`& .MuiDrawer-paper`]: { width: 240, boxSizing: 'border-box' },
+                    }}
+                >
+                    <p>Players:</p>
+                    {players.map((player, i) =>
+                        (<p key={i}>#{i+1}: {player}</p>))}
+                </Drawer>
             </Box>
            
         ) : 
