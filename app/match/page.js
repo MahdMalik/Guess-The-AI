@@ -11,6 +11,7 @@ export default function Home() {
     const [messages, setMessages] = useState([])
     const [mode, setMode] = useState("Discussion")
     const [players, setPlayers] = useState([])
+    const [hasVoted, setHasVoted] = useState(false) 
 
     const OnMessageFunction = async (data) => {
         //GAME START!
@@ -28,17 +29,15 @@ export default function Home() {
         {
             console.log("Time to vote!")
             setMode("Voting")
-            const packet = {
-                username: username,
-                server_id: server_id,
-                messageType: "Add Vote",
-                votedPerson: username
-            }
-            socket.current.SendData(packet)
+            setHasVoted(false)
         }
         else if(data.message == "Discussion Time")
         {
             console.log("Discuss time again! The voted player was: " + data.voted_person)
+            const index = players.findIndex(data.voted_person)
+            setHasVoted((prev) => {
+                return prev.splice(index, 1)
+            })
             setMode("Discussion")
         }
         else if(data.message == "Voted Out")
@@ -91,6 +90,17 @@ export default function Home() {
         }
         await socket.current.SendData(packet)
     }
+
+    const SendVote = async(player) => {
+        const packet = {
+            username: username,
+            server_id: server_id,
+            messageType: "Add Vote",
+            votedPerson: player
+        }
+        socket.current.SendData(packet)
+        setHasVoted(true)
+    }
     
     return (<div>
         { gameStarted ? 
@@ -116,7 +126,11 @@ export default function Home() {
                 >
                     <p>Players:</p>
                     {players.map((player, i) =>
-                        (<p key={i}>#{i+1}: {player}</p>))}
+                        (<div>
+                            <p key={i}>#{i+1}: {player}</p>
+                            {mode == "Voting" && hasVoted && <Button variant="contained" onClick={SendVote(player)}>VOTE</Button>}
+                        </div>)
+                    )}
                 </Drawer>
             </Box>
            
