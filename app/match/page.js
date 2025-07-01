@@ -13,6 +13,13 @@ export default function Home() {
     const [players, setPlayers] = useState([])
     const [hasVoted, setHasVoted] = useState(false) 
 
+    const VoteOutPlayer = (name) => {
+        const index = players.indexOf(name)
+        setPlayers((prev) => {
+            return prev.splice(index, 1)
+        })
+    }
+
     const OnMessageFunction = async (data) => {
         //GAME START!
         console.log(data)
@@ -34,10 +41,7 @@ export default function Home() {
         else if(data.message == "Discussion Time")
         {
             console.log("Discuss time again! The voted player was: " + data.voted_person)
-            const index = players.findIndex(data.voted_person)
-            setHasVoted((prev) => {
-                return prev.splice(index, 1)
-            })
+            VoteOutPlayer(data.voted_person)
             setMode("Discussion")
         }
         else if(data.message == "Voted Out")
@@ -49,6 +53,7 @@ export default function Home() {
         }
         else if(data.message == "Game Over")
         {
+            VoteOutPlayer(data.voted_person)
             alert("Game is over now! Winner: " + data.winner + "! Oh yeah last person voted out was: " + data.voted_person)
             socket.current.socket.removeEventListener("message", socket.current.MessageListener)
             socket.current.socket.close(1000, "Finished Match")
@@ -113,7 +118,7 @@ export default function Home() {
                     {messages.map((message, index) => 
                         (<p key={index}>Message #{index + 1} by {message.name}: {message.message}</p>)
                     )}
-                    {mode == "Voting" && <p>Voting now! You'll be voting yourself though lol.</p>}
+                    {mode == "Voting" && <p>Voting now! Pick who you want from the sidebar.</p>}
                 </Box>
                 <Drawer
                     variant="permanent"
@@ -126,10 +131,10 @@ export default function Home() {
                 >
                     <p>Players:</p>
                     {players.map((player, i) =>
-                        (<div>
-                            <p key={i}>#{i+1}: {player}</p>
-                            {mode == "Voting" && hasVoted && <Button variant="contained" onClick={SendVote(player)}>VOTE</Button>}
-                        </div>)
+                        (<Stack flexDirection="row" key={i}>
+                            <p>#{i+1}: {player}</p>
+                            {mode == "Voting" && !hasVoted && <Button variant="contained" onClick={() => SendVote(player)}>VOTE</Button>}
+                        </Stack>)
                     )}
                 </Drawer>
             </Box>
