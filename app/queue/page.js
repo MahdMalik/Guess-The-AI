@@ -45,8 +45,8 @@ export default function Home() {
         else
         {
             socket.current = new Sockets(username, OnMessageFunction, null, "Queue")
-            const success = await socket.current.CreateSocket("Join Queue", "One Bot Game")
-            if(success)
+            const result = await socket.current.CreateSocket("Join Queue", "One Bot Game")
+            if(result.success)
             {
                 setQueueStatus(true)
             }

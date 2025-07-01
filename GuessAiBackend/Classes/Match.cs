@@ -5,6 +5,7 @@ namespace Classes
     public class Match
     {
         LinkedList<Player> players;
+        String[] initialPlayerNames;
         private byte roundNumber;
         private readonly byte MAX_ROUND_NUM;
         private String gamemode;
@@ -48,6 +49,14 @@ namespace Classes
             timer = new Stopwatch();
             timer.Start();
             hashCode = Guid.NewGuid().ToString();
+
+            initialPlayerNames = new String[players.Count];
+            byte index = 0;
+            foreach (Player plr in players)
+            {
+                initialPlayerNames[index] = plr.GetName();
+                index++;
+            }
         }
 
         //we want the user to hold onto something that tells them which match they're in, and then using that have them be able to add the message very quickly.
@@ -244,6 +253,11 @@ namespace Classes
                 }
                 RunTalk();
             }
+        }
+
+        public String[] ReturnPlayers()
+        {
+            return initialPlayerNames;
         }
     }
 }
