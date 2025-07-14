@@ -79,8 +79,8 @@ namespace Classes
                         plantedMessage = new
                         {
                             success = success,
-                            message = message,
-                            type = "Confirmation"
+                            details = message,
+                            message = "Confirmation"
                         };
                         await SendPacket();
                         break;
@@ -104,8 +104,8 @@ namespace Classes
                         plantedMessage = new
                         {
                             success = success,
-                            message = message,
-                            type = "Confirmation"
+                            details = message,
+                            message = "Confirmation"
                         };
                         await SendPacket();
                         break;
@@ -135,8 +135,8 @@ namespace Classes
                         plantedMessage = new
                         {
                             success = success,
-                            message = message,
-                            type = "Confirmation",
+                            details = message,
+                            message = "Confirmation",
                             names = playerNames
                         };
                         await SendPacket();

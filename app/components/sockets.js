@@ -17,7 +17,7 @@ export class Sockets
         {
             const getConfirm = (response) => {
                 const data = JSON.parse(response.data)
-                if(data.type == "Confirmation")
+                if(data.message == "Confirmation")
                 {
                     this.socket.removeEventListener("message", getConfirm)
                     resolve(data)
@@ -36,7 +36,7 @@ export class Sockets
         this.MessageListener = (response) => {
             console.log(response)
             const data = JSON.parse(response.data)
-            if(data.type != "Confirmation" && data.success)
+            if(data.message != "Confirmation" && data.success)
             {
                 //do something with it
                 this.OnMessageFunction(data)
