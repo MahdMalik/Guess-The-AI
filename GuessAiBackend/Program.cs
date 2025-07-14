@@ -113,7 +113,6 @@ _ = Task.Run(async () =>
                                 {
                                     success = true,
                                     message = "Game Starting!",
-                                    type = "Server Event",
                                     server_id = matchHash
                                 };
                                 theSocket.GoToSendMessage(sentMessage);

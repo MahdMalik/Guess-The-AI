@@ -76,7 +76,6 @@ namespace Classes
                 object packet = new
                 {
                     message = "Voting Time",
-                    type = "Server Event",
                     server_id = hashCode,
                     success = true
                 };
@@ -104,9 +103,9 @@ namespace Classes
                 SocketHandler associatedSocket = Globals.socketPlayerMapping[plr];
                 object packet = new
                 {
-                    message = message,
-                    type = "Message Arrived",
+                    sentMessage = message,
                     server_id = hashCode,
+                    message = "Message Arrived",
                     sender = sendingUser,
                     success = true
                 };
@@ -245,7 +244,6 @@ namespace Classes
                     object packet = new
                     {
                         message = "Game Start! Discussion First",
-                        type = "Server Event",
                         server_id = hashCode,
                         success = true
                     };
