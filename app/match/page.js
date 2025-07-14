@@ -60,9 +60,11 @@ export default function Home() {
         }
     }
 
+    //connects to the server on startup
     useEffect(() => {
-        
+        //to use async in a useeffect, you have to assign it to a function and then call that function
         const startFunct = async () => {
+            //last time as we went to the match, we stored the id in localstorage, now we're getting that
             const hashId = sessionStorage.getItem("server_id")
             setId(hashId)
             //now, reset it back to what it once was    
@@ -121,6 +123,7 @@ export default function Home() {
                     )}
                     {mode == "Voting" && <p>Voting now! Pick who you want from the sidebar.</p>}
                 </Box>
+                {/* Here is where the sidebar is drawn. */}
                 <Drawer
                     variant="permanent"
                     anchor="right"

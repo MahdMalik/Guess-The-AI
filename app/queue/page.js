@@ -9,6 +9,7 @@ export default function Home() {
     const [username, setName] = useState(navigator.userAgent)
     const socket = useRef(null);
 
+    //takes messages incoming from the server and acts appropriately
     const OnMessageFunction = async (data) => {
         if(data.message == "Game Starting!")
         {
@@ -19,6 +20,7 @@ export default function Home() {
         }
     }
 
+    //toggles their connection to the queue
     const toggleQueue = async() => {
         //means there's already a connection
         if(socket.current != null)
@@ -33,6 +35,7 @@ export default function Home() {
             {
                 console.log("Error doing that: " + response.message)
             }
+            //otherwise, meant we have successfully left the queue
             else
             {
                 socket.current.CloseSocket();
