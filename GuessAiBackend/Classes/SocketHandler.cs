@@ -14,7 +14,7 @@ namespace Classes
     public class SocketHandler
     {
         private WebSocket socket;
-        private object plantedMessage;
+        private ServerMessage plantedMessage;
 
         private Player? ourPlayer;
 
@@ -29,7 +29,7 @@ namespace Classes
             var bufferMessage = Encoding.UTF8.GetBytes(jsonMessage);
             await socket.SendAsync(new ArraySegment<byte>(bufferMessage), WebSocketMessageType.Text, true, CancellationToken.None);
             Console.WriteLine("Message Sent!");
-            plantedMessage = null;
+            plantedMessage = new ServerMessage();
         }
 
         async public Task ProcessReceivedData(byte[] buffer, WebSocketReceiveResult receivedData)
@@ -76,12 +76,11 @@ namespace Classes
                         {
                             Globals.socketPlayerMapping.Add(ourPlayer, this);
                         }
-                        plantedMessage = new
-                        {
-                            success = success,
-                            details = message,
-                            message = "Confirmation"
-                        };
+
+                        plantedMessage.success = success;
+                        plantedMessage.details = message;
+                        plantedMessage.message = "Confirmation";
+
                         await SendPacket();
                         break;
                     case "Leave Queue":
@@ -101,12 +100,11 @@ namespace Classes
                             Globals.playerMapping.Remove(ourPlayer.GetName());
                             message += ", removed player: " + ourPlayer.GetName();
                         }
-                        plantedMessage = new
-                        {
-                            success = success,
-                            details = message,
-                            message = "Confirmation"
-                        };
+
+                        plantedMessage.success = success;
+                        plantedMessage.details = message;
+                        plantedMessage.message = "Confirmation";
+
                         await SendPacket();
                         break;
                     case "Join Match":
@@ -132,13 +130,12 @@ namespace Classes
                                 message = "The Hash ID was not found!";
                             }
                         }
-                        plantedMessage = new
-                        {
-                            success = success,
-                            details = message,
-                            message = "Confirmation",
-                            names = playerNames
-                        };
+
+                        plantedMessage.success = success;
+                        plantedMessage.details = message;
+                        plantedMessage.message = "Confirmation";
+                        plantedMessage.names = playerNames;
+
                         await SendPacket();
                         //this way, we first send the confirmation method first, even if say this is the last client to connect and thus the match should start
                         if (success)
@@ -163,12 +160,11 @@ namespace Classes
                                 message = "The Hash ID was not found!";
                             }
                         }
-                        plantedMessage = new
-                        {
-                            success = success,
-                            details = message,
-                            message = "Confirmation"
-                        };
+
+                        plantedMessage.success = success;
+                        plantedMessage.details = message;
+                        plantedMessage.message = "Confirmation";
+
                         await SendPacket();
                         if (success)
                         {
@@ -192,12 +188,11 @@ namespace Classes
                                 message = "The Hash ID was not found!";
                             }
                         }
-                        plantedMessage = new
-                        {
-                            success = success,
-                            details = message,
-                            message = "Confirmation"
-                        };
+
+                        plantedMessage.success = success;
+                        plantedMessage.details = message;
+                        plantedMessage.message = "Confirmation";
+
                         await SendPacket();
                         if (success)
                         {
@@ -218,6 +213,9 @@ namespace Classes
 
         async public Task HandleSocket()
         {
+            //first, create this object
+            plantedMessage = new ServerMessage();
+
             while (socket.State == WebSocketState.Open)
             {
                 byte[] buffer = new byte[5000];
@@ -235,7 +233,7 @@ namespace Classes
             }
         }
 
-        public async Task GoToSendMessage(object message)
+        public async Task GoToSendMessage(ServerMessage message)
         {
             plantedMessage = message;
             SendPacket();

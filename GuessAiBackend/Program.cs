@@ -109,12 +109,11 @@ _ = Task.Run(async () =>
                                 SocketHandler theSocket = Globals.socketPlayerMapping[plr];
                                 Globals.socketPlayerMapping.Remove(plr);
 
-                                object sentMessage = new
-                                {
-                                    success = true,
-                                    message = "Game Starting!",
-                                    server_id = matchHash
-                                };
+                                ServerMessage sentMessage = new ServerMessage();
+                                sentMessage.success = true;
+                                sentMessage.message = "Game Starting!";
+                                sentMessage.server_id = matchHash;
+                                
                                 theSocket.GoToSendMessage(sentMessage);
                             }
                         }

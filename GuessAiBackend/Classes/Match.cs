@@ -27,10 +27,13 @@ namespace Classes
         private HashSet<String>[] votes;
 
         private Dictionary<String, byte> playerVoteMapping;
+        //simply creates the match
         public Match(LinkedList<Player> thePlayers, String theGamemode)
         {
             players = thePlayers;
+            //creates the empty array of hashsets
             votes = new HashSet<String>[thePlayers.Count];
+            //for each hashet, initialize it
             for (byte i = 0; i < votes.Length; i++)
             {
                 votes[i] = new HashSet<string>();
@@ -38,20 +41,28 @@ namespace Classes
             playerVoteMapping = new Dictionary<String, byte>();
             roundNumber = 0;
             numConnections = 0;
+            //the game alwas must end with 2 players. So, if one is voted out each round, logically for n players takes n - 2 rounds to get to 2 players left.
+            //For now we're putting it as n - 1 so we can play a game with just 2 players.
             MAX_ROUND_NUM = (byte)(thePlayers.Count - 1);
             gamemode = theGamemode;
+            //crerate the array of lists containing the messages
             messages = new List<MatchMessage>[MAX_ROUND_NUM];
+            //for each list, initialize it
             for (byte i = 0; i < messages.Length; i++)
             {
                 messages[i] = new List<MatchMessage>();
             }
+            //set start phase
             phase = "talking";
             timer = new Stopwatch();
             timer.Start();
+            //get a hashcode to send to the players
             hashCode = Guid.NewGuid().ToString();
 
+            //need this just for when a client asks for it
             initialPlayerNames = new String[players.Count];
             byte index = 0;
+            //now storing the player names
             foreach (Player plr in players)
             {
                 initialPlayerNames[index] = plr.GetName();
@@ -59,37 +70,39 @@ namespace Classes
             }
         }
 
-        //we want the user to hold onto something that tells them which match they're in, and then using that have them be able to add the message very quickly.
-        //through finding the match very quickly given the id
-
         public async Task RunTalk()
         {
+            //spin waiting for discussion timee to end
             while (timer.ElapsedMilliseconds < 1000 * SEC_PER_ROUND)
             {
                 //yield back task to other places that may need it
                 await Task.Yield();
             }
             phase = "voting";
+            //for each player, send them the message that it's time to vote
             foreach (Player plr in players)
             {
                 SocketHandler associatedSocket = Globals.socketPlayerMapping[plr];
-                object packet = new
-                {
-                    message = "Voting Time",
-                    server_id = hashCode,
-                    success = true
-                };
+
+                ServerMessage packet = new ServerMessage();
+                packet.message = "Voting Time";
+                packet.server_id = hashCode;
+                packet.success = true;
+                
                 associatedSocket.GoToSendMessage(packet);
             }
+            //now go run the voting
             RunVoting();
         }
 
         public void ReceiveMessage(String username, String message)
         {
+            //don't want to update messages when voting starts. If you send a message last minute then that's a skill issue gg
             if (phase == "voting")
             {
                 return;
             }
+            //otherwise, add it to the messages and send it out to the rest of the clients
             MatchMessage newMessage = new MatchMessage(message, username);
             messages[roundNumber].Add(newMessage);
             SendOutNewMessage(username, message);
@@ -101,14 +114,14 @@ namespace Classes
             foreach (Player plr in players)
             {
                 SocketHandler associatedSocket = Globals.socketPlayerMapping[plr];
-                object packet = new
-                {
-                    sentMessage = message,
-                    server_id = hashCode,
-                    message = "Message Arrived",
-                    sender = sendingUser,
-                    success = true
-                };
+
+                ServerMessage packet = new ServerMessage();
+                packet.sentMessage = message;
+                packet.server_id = hashCode;
+                packet.message = "Message Arrived";
+                packet.sender = sendingUser;
+                packet.success = true;
+
                 associatedSocket.GoToSendMessage(packet);
             }
         }
@@ -124,6 +137,7 @@ namespace Classes
                 //then, update where they are found
                 playerVoteMapping[chosenUser] = (byte)(playerVoteMapping[chosenUser] + 1);
             }
+            //in this case, an index of 0 means 1 vote, don't be fooled.
             else
             {
                 votes[0].Add(chosenUser);
@@ -134,6 +148,7 @@ namespace Classes
 
         public async Task RunVoting()
         {
+            //reset the stopwatch usied during discussion time, and wait until voting phase is over
             timer.Restart();
             while (timer.ElapsedMilliseconds < 1000 * SEC_PER_VOTE)
             {
@@ -145,6 +160,7 @@ namespace Classes
             //now, do the actual voting someone out part.
             for (sbyte i = (sbyte)(votes.Length - 1); i >= 0; i--)
             {
+                //for now we do this, but we'll have to have some handling for ties.
                 if (votes[i].Count > 0)
                 {
                     votedUser = votes[i].First<String>();
@@ -152,37 +168,29 @@ namespace Classes
                 }
             }
 
-            object packet;
+            ServerMessage packet;
             bool gameOver = false;
             roundNumber++;
 
-            object nonVotedPacket;
+            ServerMessage nonVotedPacket = new ServerMessage();
+            nonVotedPacket.voted_person = votedUser;
+            nonVotedPacket.server_id = hashCode;
+            nonVotedPacket.success = true;
 
+            //means it should be the final round, we over
             if (roundNumber == MAX_ROUND_NUM)
             {
                 //end game!
                 Console.WriteLine("Game has ended now!");
                 gameOver = true;
-                nonVotedPacket = new
-                {
-                    message = "Game Over",
-                    voted_person = votedUser,
-                    winner = "Players Win!",
-                    type = "Server Event",
-                    server_id = hashCode,
-                    success = true
-                };
+
+                nonVotedPacket.message = "Game Over";
+                nonVotedPacket.winner = "Players Win!";
             }
+            //otherwise, create the packet that will be sent to the players that weren't voted
             else
             {
-                nonVotedPacket = new
-                {
-                    message = "Discussion Time",
-                    voted_person = votedUser,
-                    type = "Server Event",
-                    server_id = hashCode,
-                    success = true
-                };
+                nonVotedPacket.message = "Discussion Time";
             }
 
             LinkedListNode<Player> plrNode = players.First;
@@ -192,13 +200,11 @@ namespace Classes
                 if (plrNode.Value.GetName() == votedUser)
                 {
                     //kick them out
-                    packet = new
-                    {
-                        message = "Voted Out",
-                        type = "Server Event",
-                        server_id = hashCode,
-                        success = true
-                    };
+                    packet = new ServerMessage();
+                    packet.message = "Voted Out";
+                    packet.server_id = hashCode;
+                    packet.success = true;
+
                     players.Remove(plrNode);
                 }
                 else
@@ -241,15 +247,18 @@ namespace Classes
                 foreach (Player plr in players)
                 {
                     SocketHandler associatedSocket = Globals.socketPlayerMapping[plr];
-                    object packet = new
-                    {
-                        message = "Game Start! Discussion First",
-                        server_id = hashCode,
-                        success = true
-                    };
+
+                    ServerMessage packet = new ServerMessage();
+                    packet.message = "Game Start! Discussion First";
+                    packet.server_id = hashCode;
+                    packet.success = true;
+                    
                     associatedSocket.GoToSendMessage(packet);
                 }
                 RunTalk();
+
+                //fre the memory since we no longer need it
+                initialPlayerNames = null;
             }
         }
 
