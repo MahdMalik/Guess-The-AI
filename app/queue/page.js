@@ -13,7 +13,7 @@ export default function Home() {
         if(data.message == "Game Starting!")
         {
             alert("GAME STARTING!!")
-            socket.current.socket.removeEventListener("message", socket.current.MessageListener)
+            socket.current.CloseSocket();
             sessionStorage.setItem("server_id", data.server_id)
             window.location.href = "/match"
         }
@@ -35,7 +35,7 @@ export default function Home() {
             }
             else
             {
-                socket.current.socket.close()
+                socket.current.CloseSocket();
                 socket.current = null
                 setQueueStatus(false)
                 console.log("Closed Connection!")

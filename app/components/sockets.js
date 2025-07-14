@@ -94,4 +94,10 @@ export class Sockets
             }
         })
     }
+
+    async CloseSocket()
+    {
+        this.socket.removeEventListener("message", socket.current.MessageListener)
+        this.socket.close(1000, "Close Ok")
+    }
 }

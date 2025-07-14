@@ -46,15 +46,13 @@ export default function Home() {
                 break;
             case "Voted Out":
                 alert("LMAO YOU GOT VOTED OUT BUM!")
-                socket.current.socket.removeEventListener("message", socket.current.MessageListener)
-                socket.current.socket.close(1000, "Finished Match")
+                socket.current.CloseSocket();
                 window.location.href = "/queue"
                 break;
             case "Game Over":
                 VoteOutPlayer(data.voted_person)
                 alert("Game is over now! Winner: " + data.winner + "! Oh yeah last person voted out was: " + data.voted_person)
-                socket.current.socket.removeEventListener("message", socket.current.MessageListener)
-                socket.current.socket.close(1000, "Finished Match")
+                socket.current.CloseSocket();
                 window.location.href = "/queue"
                 break;
             default:
@@ -87,6 +85,7 @@ export default function Home() {
         startFunct()
     }, [])
 
+    //allows for sending a new message to the server
     const SendNewMessage = async() => {
         const packet = {
             username: username,
@@ -97,6 +96,7 @@ export default function Home() {
         await socket.current.SendData(packet)
     }
 
+    //lets you send a new vote to the server
     const SendVote = async(player) => {
         const packet = {
             username: username,
