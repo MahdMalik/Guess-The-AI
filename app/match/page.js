@@ -46,13 +46,13 @@ export default function Home() {
                 break;
             case "Voted Out":
                 alert("LMAO YOU GOT VOTED OUT BUM!")
-                socket.current.CloseSocket();
+                socket.current.CloseSocket("Game Over");
                 window.location.href = "/queue"
                 break;
             case "Game Over":
                 VoteOutPlayer(data.voted_person)
                 alert("Game is over now! Winner: " + data.winner + "! Oh yeah last person voted out was: " + data.voted_person)
-                socket.current.CloseSocket();
+                socket.current.CloseSocket("Game Over");
                 window.location.href = "/queue"
                 break;
             default:

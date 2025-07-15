@@ -95,9 +95,9 @@ export class Sockets
         })
     }
 
-    async CloseSocket()
+    async CloseSocket(reason)
     {
-        this.socket.removeEventListener("message", socket.current.MessageListener)
-        this.socket.close(1000, "Close Ok")
+        this.socket.removeEventListener("message", this.socket.MessageListener)
+        this.socket.close(1000, reason)
     }
 }

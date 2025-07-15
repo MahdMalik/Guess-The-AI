@@ -66,7 +66,7 @@ namespace Classes
         async public Task ProcessReceivedData(byte[] buffer, WebSocketReceiveResult receivedData)
         {
             //if got a request to close the connection instead, should do it
-            if (receivedData.CloseStatus != null && receivedData.CloseStatusDescription == "Finished Match")
+            if (receivedData.CloseStatus != null && receivedData.CloseStatusDescription == "Game Over")
             {
                 Console.WriteLine("Client closed connection this time!");
                 Globals.socketPlayerMapping.Remove(ourPlayer);

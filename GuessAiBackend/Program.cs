@@ -92,8 +92,6 @@ _ = Task.Run(async () =>
                             //for each player, find the socket its associated with and tell it to send a message
                             foreach (Player plr in players)
                             {
-                                plr.SetInMatch(true);
-                                plr.SetInQueue(false);
                                 SocketHandler theSocket = Globals.socketPlayerMapping[plr];
                                 Globals.socketPlayerMapping.Remove(plr);
 

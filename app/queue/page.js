@@ -14,7 +14,7 @@ export default function Home() {
         if(data.message == "Game Starting!")
         {
             alert("GAME STARTING!!")
-            socket.current.CloseSocket();
+            socket.current.CloseSocket("Going To Match");
             sessionStorage.setItem("server_id", data.server_id)
             window.location.href = "/match"
         }
@@ -38,7 +38,7 @@ export default function Home() {
             //otherwise, meant we have successfully left the queue
             else
             {
-                socket.current.CloseSocket();
+                socket.current.CloseSocket("Going To Match");
                 socket.current = null
                 setQueueStatus(false)
                 console.log("Closed Connection!")
