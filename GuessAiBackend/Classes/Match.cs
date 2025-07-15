@@ -31,14 +31,7 @@ namespace Classes
         public Match(LinkedList<Player> thePlayers, String theGamemode)
         {
             players = thePlayers;
-            //creates the empty array of hashsets
-            votes = new HashSet<String>[thePlayers.Count];
-            //for each hashet, initialize it
-            for (byte i = 0; i < votes.Length; i++)
-            {
-                votes[i] = new HashSet<string>();
-            }
-            playerVoteMapping = new Dictionary<String, byte>();
+            ResetVotes();
             roundNumber = 0;
             numConnections = 0;
             //the game alwas must end with 2 players. So, if one is voted out each round, logically for n players takes n - 2 rounds to get to 2 players left.
@@ -89,7 +82,7 @@ namespace Classes
                 packet.server_id = hashCode;
                 packet.success = true;
                 
-                associatedSocket.GoToSendMessage(packet);
+                associatedSocket.SendPacket(packet);
             }
             //now go run the voting
             RunVoting();
@@ -122,7 +115,7 @@ namespace Classes
                 packet.sender = sendingUser;
                 packet.success = true;
 
-                associatedSocket.GoToSendMessage(packet);
+                associatedSocket.SendPacket(packet);
             }
         }
 
@@ -193,10 +186,13 @@ namespace Classes
                 nonVotedPacket.message = "Discussion Time";
             }
 
+            //iterate through all the nodes with this iterator way, because in a foreach or for loop we can't just remove it
+            //and be done with it
             LinkedListNode<Player> plrNode = players.First;
             while (plrNode != null)
             {
                 LinkedListNode<Player> nextNode = plrNode.Next;
+                //if it's the user being voted out, wipe it out 
                 if (plrNode.Value.GetName() == votedUser)
                 {
                     //kick them out
@@ -213,23 +209,32 @@ namespace Classes
                 }
 
                 SocketHandler associatedSocket = Globals.socketPlayerMapping[plrNode.Value];
-                associatedSocket.GoToSendMessage(packet);
+                associatedSocket.SendPacket(packet);
+
                 plrNode = nextNode;
             }
 
-            //reset our voting objects
-            votes = new HashSet<String>[players.Count];
-            playerVoteMapping = new Dictionary<String, byte>();
-            for (byte i = 0; i < votes.Length; i++)
-            {
-                votes[i] = new HashSet<string>();
-            }
+            //reset our voting data
+            ResetVotes();
 
             //if the game's not over, go back to discussion method
             if (!gameOver)
             {
                 RunTalk();
             }
+        }
+
+        public void ResetVotes()
+        {
+            //creates the empty array of hashsets
+            votes = new HashSet<String>[players.Count];
+            //for each hashet, initialize it
+            for (byte i = 0; i < votes.Length; i++)
+            {
+                votes[i] = new HashSet<string>();
+            }
+            playerVoteMapping = new Dictionary<String, byte>();
+
         }
 
         public String GetHash()
@@ -241,23 +246,26 @@ namespace Classes
         {
             Console.WriteLine("Match added connection!");
             numConnections++;
+            //once everybody's connected, send the message to them to start the game.
             if (numConnections == players.Count)
             {
                 Console.WriteLine("We are Ready!");
+
+                ServerMessage packet = new ServerMessage();
+                packet.message = "Game Start! Discussion First";
+                packet.server_id = hashCode;
+                packet.success = true;
+
                 foreach (Player plr in players)
                 {
                     SocketHandler associatedSocket = Globals.socketPlayerMapping[plr];
 
-                    ServerMessage packet = new ServerMessage();
-                    packet.message = "Game Start! Discussion First";
-                    packet.server_id = hashCode;
-                    packet.success = true;
-                    
-                    associatedSocket.GoToSendMessage(packet);
+
+                    associatedSocket.SendPacket(packet);
                 }
                 RunTalk();
 
-                //fre the memory since we no longer need it
+                //free the memory since we no longer need it
                 initialPlayerNames = null;
             }
         }
