@@ -62,21 +62,7 @@ app.Use(async (context, next) =>
     }
 });
 
-
-
-// Minimal test endpoint
-app.MapGet("/", () => "Hello from your backend!");
-
-app.MapGet("/test", () =>
-{
-    string returnMessage = "Hi, backend here!";
-    return Results.Ok(new
-    {
-        success = true,
-        message = returnMessage
-    });
-});
-
+//runs the task to start matches
 _ = Task.Run(async () =>
 {
     Stopwatch stopwatch = new Stopwatch();
@@ -90,6 +76,8 @@ _ = Task.Run(async () =>
                 //first, check if the stopwatch has been started already
                 if (stopwatch.IsRunning)
                 {
+                    //to simulate an actual queue for hype, we do it so that it only sends you in half a second after it's ready, so when there's 100 players in the queue,
+                    //it's going at a rate of starting a match every .5 seconds
                     if (stopwatch.ElapsedMilliseconds > 500)
                     {
                         stopwatch.Stop();
@@ -102,21 +90,17 @@ _ = Task.Run(async () =>
                             String matchHash = newMatch.GetHash();
                             Globals.matches.Add(matchHash, newMatch);
                             //for each player, find the socket its associated with and tell it to send a message
-                            foreach(Player plr in players)
+                            foreach (Player plr in players)
                             {
-                                plr.SetInMatch(true);
-                                plr.SetInQueue(false);
                                 SocketHandler theSocket = Globals.socketPlayerMapping[plr];
                                 Globals.socketPlayerMapping.Remove(plr);
 
-                                object sentMessage = new
-                                {
-                                    success = true,
-                                    message = "Game Starting!",
-                                    type = "Server Event",
-                                    server_id = matchHash
-                                };
-                                theSocket.GoToSendMessage(sentMessage);
+                                ServerMessage sentMessage = new ServerMessage();
+                                sentMessage.success = true;
+                                sentMessage.message = "Game Starting!";
+                                sentMessage.server_id = matchHash;
+
+                                theSocket.SendPacket(sentMessage);
                             }
                         }
                         else

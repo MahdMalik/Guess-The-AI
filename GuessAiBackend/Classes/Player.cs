@@ -18,15 +18,5 @@ namespace Classes
         {
             return username;
         }
-
-        public void SetInQueue(bool newStatus)
-        {
-            inQueue = newStatus;
-        }
-
-        public void SetInMatch(bool newStatus)
-        {
-            inGame = newStatus;
-        }
     }
 }

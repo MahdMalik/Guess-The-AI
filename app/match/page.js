@@ -13,6 +13,7 @@ export default function Home() {
     const [players, setPlayers] = useState([])
     const [hasVoted, setHasVoted] = useState(false) 
 
+    //using the player name, removes them from the array of players
     const VoteOutPlayer = (name) => {
         const index = players.indexOf(name)
         setPlayers((prev) => {
@@ -20,50 +21,50 @@ export default function Home() {
         })
     }
 
+    //the function called whenever we receive a message from the server. Most are self explanatory
     const OnMessageFunction = async (data) => {
         //GAME START!
         console.log(data)
-        if(data.message == "Game Start! Discussion First")
+        switch(data.message)
         {
-            setStart(true)
-        }
-        else if(data.type != null && data.type == "Message Arrived")
-        {
-            console.log("Message added!")
-            setMessages((prev) => [...prev, {name: data.sender, message: data.message}])
-        }
-        else if (data.message == "Voting Time")
-        {
-            console.log("Time to vote!")
-            setMode("Voting")
-            setHasVoted(false)
-        }
-        else if(data.message == "Discussion Time")
-        {
-            console.log("Discuss time again! The voted player was: " + data.voted_person)
-            VoteOutPlayer(data.voted_person)
-            setMode("Discussion")
-        }
-        else if(data.message == "Voted Out")
-        {
-            alert("LMAO YOU GOT VOTED OUT BUM!")
-            socket.current.socket.removeEventListener("message", socket.current.MessageListener)
-            socket.current.socket.close(1000, "Finished Match")
-            window.location.href = "/queue"
-        }
-        else if(data.message == "Game Over")
-        {
-            VoteOutPlayer(data.voted_person)
-            alert("Game is over now! Winner: " + data.winner + "! Oh yeah last person voted out was: " + data.voted_person)
-            socket.current.socket.removeEventListener("message", socket.current.MessageListener)
-            socket.current.socket.close(1000, "Finished Match")
-            window.location.href = "/queue"
+            case "Game Start! Discussion First":
+                setStart(true)    
+                break;
+            case "Message Arrived":
+                console.log("Message added!")
+                setMessages((prev) => [...prev, {name: data.sender, message: data.sentMessage}])
+                break;
+            case "Voting Time":
+                console.log("Time to vote!")
+                setMode("Voting")
+                setHasVoted(false)
+                break;
+            case "Discussion Time":
+                console.log("Discuss time again! The voted player was: " + data.voted_person)
+                VoteOutPlayer(data.voted_person)
+                setMode("Discussion")
+                break;
+            case "Voted Out":
+                alert("LMAO YOU GOT VOTED OUT BUM!")
+                socket.current.CloseSocket("Game Over");
+                window.location.href = "/queue"
+                break;
+            case "Game Over":
+                VoteOutPlayer(data.voted_person)
+                alert("Game is over now! Winner: " + data.winner + "! Oh yeah last person voted out was: " + data.voted_person)
+                socket.current.CloseSocket("Game Over");
+                window.location.href = "/queue"
+                break;
+            default:
+                break;
         }
     }
 
+    //connects to the server on startup
     useEffect(() => {
-        
+        //to use async in a useeffect, you have to assign it to a function and then call that function
         const startFunct = async () => {
+            //last time as we went to the match, we stored the id in localstorage, now we're getting that
             const hashId = sessionStorage.getItem("server_id")
             setId(hashId)
             //now, reset it back to what it once was    
@@ -86,6 +87,7 @@ export default function Home() {
         startFunct()
     }, [])
 
+    //allows for sending a new message to the server
     const SendNewMessage = async() => {
         const packet = {
             username: username,
@@ -96,6 +98,7 @@ export default function Home() {
         await socket.current.SendData(packet)
     }
 
+    //lets you send a new vote to the server
     const SendVote = async(player) => {
         const packet = {
             username: username,
@@ -120,6 +123,7 @@ export default function Home() {
                     )}
                     {mode == "Voting" && <p>Voting now! Pick who you want from the sidebar.</p>}
                 </Box>
+                {/* Here is where the sidebar is drawn. */}
                 <Drawer
                     variant="permanent"
                     anchor="right"

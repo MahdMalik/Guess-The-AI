@@ -9,16 +9,18 @@ export default function Home() {
     const [username, setName] = useState(navigator.userAgent)
     const socket = useRef(null);
 
+    //takes messages incoming from the server and acts appropriately
     const OnMessageFunction = async (data) => {
         if(data.message == "Game Starting!")
         {
             alert("GAME STARTING!!")
-            socket.current.socket.removeEventListener("message", socket.current.MessageListener)
+            socket.current.CloseSocket("Going To Match");
             sessionStorage.setItem("server_id", data.server_id)
             window.location.href = "/match"
         }
     }
 
+    //toggles their connection to the queue
     const toggleQueue = async() => {
         //means there's already a connection
         if(socket.current != null)
@@ -33,9 +35,10 @@ export default function Home() {
             {
                 console.log("Error doing that: " + response.message)
             }
+            //otherwise, meant we have successfully left the queue
             else
             {
-                socket.current.socket.close()
+                socket.current.CloseSocket("Going To Match");
                 socket.current = null
                 setQueueStatus(false)
                 console.log("Closed Connection!")
