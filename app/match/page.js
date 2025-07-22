@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState, useRef } from "react";
 import { Sockets } from "../components/sockets";
-import { Button, Stack, Box, Drawer, List, ListItem, ListItemText } from "@mui/material";
+import { Button, Stack, Box, Drawer, List, ListItem, ListItemText, TextField } from "@mui/material";
 
 export default function Home() {
     const socket = useRef(null);
@@ -12,6 +12,7 @@ export default function Home() {
     const [mode, setMode] = useState("Discussion")
     const [players, setPlayers] = useState([])
     const [hasVoted, setHasVoted] = useState(false) 
+    const [message, setMessage] = useState("")
 
     //using the player name, removes them from the array of players
     const VoteOutPlayer = (name) => {
@@ -19,6 +20,8 @@ export default function Home() {
         setPlayers((prev) => {
             return prev.splice(index, 1)
         })
+        //also want to send a system message that they were voted out
+        setMessage(prev => [...prev, {name: "SYSTEM", message: name + " WAS VOTED OUT!"}])
     }
 
     //the function called whenever we receive a message from the server. Most are self explanatory
@@ -89,12 +92,18 @@ export default function Home() {
 
     //allows for sending a new message to the server
     const SendNewMessage = async() => {
+        //don't want to just allow sending blank messages
+        if(message.trim() == "")
+        {
+            return
+        }
         const packet = {
             username: username,
             server_id: server_id,
             messageType: "New Message",
-            saidMessage: "Hello!"
+            saidMessage: message
         }
+        setMessage("")
         await socket.current.SendData(packet)
     }
 
@@ -117,7 +126,16 @@ export default function Home() {
                 <Box flex={1} p ={2}>
                     <p>Game Start!</p>
                     {/* This way if it's in discussion, it'll provide the button to send another message */}
-                    {mode == "Discussion" && <Button onClick={SendNewMessage}>Send A Message</Button>}
+                    {mode == "Discussion" && 
+                        <Stack flexDirection="row">
+                            <TextField placeholder="Message Here" value={message} onChange={(e) => setMessage(e.target.value)} onKeyDown={(e) => {
+                                if(e.key == "Enter")
+                                {
+                                    SendNewMessage();
+                                }
+                            }}/>
+                            <Button onClick={SendNewMessage}>Send</Button>
+                        </Stack>}
                     {messages.map((message, index) => 
                         (<p key={index}>Message #{index + 1} by {message.name}: {message.message}</p>)
                     )}
