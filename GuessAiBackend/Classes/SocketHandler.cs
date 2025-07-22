@@ -210,7 +210,7 @@ namespace Classes
                             ourMatch.SendOutNewMessage(messageData.username, messageData.saidMessage);
                             break;
                         case "ReceiveVote":
-                            ourMatch.ReceiveVote(messageData.votedPerson);
+                            ourMatch.ReceiveVote(messageData.votedPerson, messageData.username);
                             break;
                         default:
                             break;
