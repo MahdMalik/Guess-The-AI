@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GuessAiBackend")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+faadcdcff2774c40264f2cec2e88171463133c82")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5f315d61cb7ca3cd3443f299501b9a37dae01829")]
 [assembly: System.Reflection.AssemblyProductAttribute("GuessAiBackend")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GuessAiBackend")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

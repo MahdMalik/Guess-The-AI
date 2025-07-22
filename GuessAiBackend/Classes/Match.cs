@@ -27,6 +27,8 @@ namespace Classes
         private HashSet<String>[] votes;
 
         private Dictionary<String, byte> playerVoteMapping;
+
+        private HashSet<String> playersWhoNotVote;
         //simply creates the match
         public Match(LinkedList<Player> thePlayers, String theGamemode)
         {
@@ -119,7 +121,7 @@ namespace Classes
             }
         }
 
-        public async void ReceiveVote(String chosenUser)
+        private async void AddVoteToUser(String chosenUser)
         {
             //check if it's already been put into the hashmap. If not, means it currently has 0 votes.
             if (playerVoteMapping.ContainsKey(chosenUser))
@@ -136,6 +138,15 @@ namespace Classes
                 votes[0].Add(chosenUser);
                 playerVoteMapping.Add(chosenUser, 0);
             }
+        }
+
+        public async void ReceiveVote(String chosenUser, String sendingUser)
+        {
+            //remove them cause now they have voted
+            playersWhoNotVote.Remove(sendingUser);
+
+            AddVoteToUser(chosenUser);
+
             Console.WriteLine("Vote Added!");
         }
 
@@ -148,6 +159,14 @@ namespace Classes
                 await Task.Yield();
             }
             phase = "talking";
+
+            //we need to find the players who have yet to vote, as stored in "playersWhoNotVote". Now, we need to
+            //give them an extra vote since they hadn't voted.
+            foreach (String plr in playersWhoNotVote)
+            {
+                Console.WriteLine($"Since {plr} didn't vote, give them a vote!");
+                AddVoteToUser(plr);
+            }
 
             String votedUser = "";
             //now, do the actual voting someone out part.
@@ -228,11 +247,18 @@ namespace Classes
         {
             //creates the empty array of hashsets
             votes = new HashSet<String>[players.Count];
-            //for each hashet, initialize it
-            for (byte i = 0; i < votes.Length; i++)
+
+            //gotta reset it.
+            playersWhoNotVote = new HashSet<string>();
+            foreach (Player plr in players)
             {
-                votes[i] = new HashSet<string>();
+                playersWhoNotVote.Add(plr.GetName());
             }
+            //for each hashet, initialize it
+                for (byte i = 0; i < votes.Length; i++)
+                {
+                    votes[i] = new HashSet<string>();
+                }
             playerVoteMapping = new Dictionary<String, byte>();
 
         }
