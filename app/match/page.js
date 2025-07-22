@@ -125,6 +125,10 @@ export default function Home() {
             <Box display="flex" alignItems = "flex-start">
                 <Box flex={1} p ={2}>
                     <p>Game Start!</p>
+                    {messages.map((message, index) => 
+                        (<p key={index}>Message #{index + 1} by {message.name}: {message.message}</p>)
+                    )}
+
                     {/* This way if it's in discussion, it'll provide the button to send another message */}
                     {mode == "Discussion" && 
                         <Stack flexDirection="row">
@@ -135,10 +139,9 @@ export default function Home() {
                                 }
                             }}/>
                             <Button onClick={SendNewMessage}>Send</Button>
-                        </Stack>}
-                    {messages.map((message, index) => 
-                        (<p key={index}>Message #{index + 1} by {message.name}: {message.message}</p>)
-                    )}
+                        </Stack>
+                    }
+
                     {mode == "Voting" && <p>Voting now! Pick who you want from the sidebar.</p>}
                 </Box>
                 {/* Here is where the sidebar is drawn. */}
