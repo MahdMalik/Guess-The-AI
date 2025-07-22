@@ -164,6 +164,7 @@ namespace Classes
             //give them an extra vote since they hadn't voted.
             foreach (String plr in playersWhoNotVote)
             {
+                Console.WriteLine($"Since {plr} didn't vote, give them a vote!");
                 AddVoteToUser(plr);
             }
 
@@ -254,7 +255,7 @@ namespace Classes
                 playersWhoNotVote.Add(plr.GetName());
             }
             //for each hashet, initialize it
-                for (byte i = 1; i < votes.Length; i++)
+                for (byte i = 0; i < votes.Length; i++)
                 {
                     votes[i] = new HashSet<string>();
                 }
