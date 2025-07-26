@@ -42,9 +42,12 @@ export default function Home() {
                 setMode("Voting")
                 setHasVoted(false)
                 break;
-            case "Discussion Time":
-                console.log("Discuss time again! The voted player was: " + data.voted_person)
+            case "Person Voted Out":
+                console.log("Votes Are In! The voted player was: " + data.voted_person)
                 VoteOutPlayer(data.voted_person)
+                setMode("Intermission")
+                break;
+            case "Discussion Time":
                 setMode("Discussion")
                 break;
             case "Voted Out":
@@ -54,7 +57,7 @@ export default function Home() {
                 break;
             case "Game Over":
                 VoteOutPlayer(data.voted_person)
-                alert("Game is over now! Winner: " + data.winner + "! Oh yeah last person voted out was: " + data.voted_person)
+                alert("Game is over now! Winner: " + data.winner + "!")
                 socket.current.CloseSocket("Game Over");
                 window.location.href = "/queue"
                 break;
@@ -143,6 +146,7 @@ export default function Home() {
                     }
 
                     {mode == "Voting" && <p>Voting now! Pick who you want from the sidebar.</p>}
+                    {mode == "Intermission" && <p>Votes are in!</p>}
                 </Box>
                 {/* Here is where the sidebar is drawn. */}
                 <Drawer

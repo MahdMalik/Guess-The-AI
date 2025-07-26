@@ -17,6 +17,7 @@ namespace Classes
 
         private const byte SEC_PER_ROUND = 15;
         private const byte SEC_PER_VOTE = 15;
+        private const byte SEC_PER_INTERMISSION = 10;
 
         Stopwatch timer;
 
@@ -188,22 +189,7 @@ namespace Classes
             nonVotedPacket.voted_person = votedUser;
             nonVotedPacket.server_id = hashCode;
             nonVotedPacket.success = true;
-
-            //means it should be the final round, we over
-            if (roundNumber == MAX_ROUND_NUM)
-            {
-                //end game!
-                Console.WriteLine("Game has ended now!");
-                gameOver = true;
-
-                nonVotedPacket.message = "Game Over";
-                nonVotedPacket.winner = "Players Win!";
-            }
-            //otherwise, create the packet that will be sent to the players that weren't voted
-            else
-            {
-                nonVotedPacket.message = "Discussion Time";
-            }
+            nonVotedPacket.message = "Person Voted Out!";
 
             //iterate through all the nodes with this iterator way, because in a foreach or for loop we can't just remove it
             //and be done with it
@@ -235,6 +221,45 @@ namespace Classes
 
             //reset our voting data
             ResetVotes();
+
+            timer.Restart();
+            while (timer.ElapsedMilliseconds < 1000 * SEC_PER_INTERMISSION)
+            {
+                await Task.Yield();
+            }
+
+            ServerMessage nextPacket = new ServerMessage();
+            nextPacket.server_id = hashCode;
+            nextPacket.success = true;
+
+            //means it should be the final round, we over
+            if (roundNumber == MAX_ROUND_NUM)
+            {
+                //end game!
+                Console.WriteLine("Game has ended now!");
+                gameOver = true;
+
+                nextPacket.message = "Game Over";
+                nextPacket.winner = "Players Win!";
+            }
+            //otherwise, create the packet that will be sent to the players that weren't voted
+            else
+            {
+                nextPacket.message = "Discussion Time";
+            }
+
+            //iterate through all the nodes with this iterator way, because in a foreach or for loop we can't just remove it
+            //and be done with it
+            plrNode = players.First;
+            while (plrNode != null)
+            {
+                LinkedListNode<Player> nextNode = plrNode.Next;
+                SocketHandler associatedSocket = Globals.socketPlayerMapping[plrNode.Value];
+                associatedSocket.SendPacket(nextPacket);
+
+                plrNode = nextNode;
+            }
+
 
             //if the game's not over, go back to discussion method
             if (!gameOver)
