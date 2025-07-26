@@ -13,6 +13,7 @@ export default function Home() {
     const [players, setPlayers] = useState([])
     const [hasVoted, setHasVoted] = useState(false) 
     const [message, setMessage] = useState("")
+    const [votedPerson, setVotedPerson] = useState("")
 
     //using the player name, removes them from the array of players
     const VoteOutPlayer = (name) => {
@@ -43,7 +44,7 @@ export default function Home() {
                 setHasVoted(false)
                 break;
             case "Person Voted Out":
-                console.log("Votes Are In! The voted player was: " + data.voted_person)
+                setVotedPerson(data.voted_person)
                 VoteOutPlayer(data.voted_person)
                 setMode("Intermission")
                 break;
@@ -56,7 +57,6 @@ export default function Home() {
                 window.location.href = "/queue"
                 break;
             case "Game Over":
-                VoteOutPlayer(data.voted_person)
                 alert("Game is over now! Winner: " + data.winner + "!")
                 socket.current.CloseSocket("Game Over");
                 window.location.href = "/queue"
@@ -146,7 +146,7 @@ export default function Home() {
                     }
 
                     {mode == "Voting" && <p>Voting now! Pick who you want from the sidebar.</p>}
-                    {mode == "Intermission" && <p>Votes are in!</p>}
+                    {mode == "Intermission" && <p>Votes are in! Voted person was: {votedPerson}</p>}
                 </Box>
                 {/* Here is where the sidebar is drawn. */}
                 <Drawer

@@ -189,7 +189,7 @@ namespace Classes
             nonVotedPacket.voted_person = votedUser;
             nonVotedPacket.server_id = hashCode;
             nonVotedPacket.success = true;
-            nonVotedPacket.message = "Person Voted Out!";
+            nonVotedPacket.message = "Person Voted Out";
 
             //iterate through all the nodes with this iterator way, because in a foreach or for loop we can't just remove it
             //and be done with it
