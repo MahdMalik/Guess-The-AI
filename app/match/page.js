@@ -2,6 +2,19 @@
 import { useEffect, useState, useRef } from "react";
 import { Sockets } from "../components/sockets";
 import { Button, Stack, Box, Drawer, List, ListItem, ListItemText, TextField } from "@mui/material";
+import {
+  Chart as ChartJS,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend,
+  BarController
+} from 'chart.js';
+
+ChartJS.register(BarElement, CategoryScale, LinearScale, BarController, Tooltip, Legend);
+
+import { Chart } from "react-chartjs-2";
 
 export default function Home() {
     const socket = useRef(null);
@@ -13,6 +26,40 @@ export default function Home() {
     const [players, setPlayers] = useState([])
     const [hasVoted, setHasVoted] = useState(false) 
     const [message, setMessage] = useState("")
+    const [votedPerson, setVotedPerson] = useState("")
+    
+    const [graphData, setGraphData] = useState({
+        labels: [],
+        datasets: [
+            {
+                label: 'Votes',
+                data: [],
+                backgroundColor: []
+            }
+        ]
+    })
+
+    const graphOptions = 
+    {
+        scales: 
+        {
+            x: {
+                ticks: 
+                {
+                    maxRotation: 0,
+                    minRotation: 0,
+                }
+            },
+            y: 
+            {
+                beginAtZero: true,
+                ticks: 
+                {
+                    stepSize: 1,  // <-- increments of 1
+                }
+            }
+        }
+    };
 
     //using the player name, removes them from the array of players
     const VoteOutPlayer = (name) => {
@@ -22,6 +69,55 @@ export default function Home() {
         })
         //also want to send a system message that they were voted out
         setMessage(prev => [...prev, {name: "SYSTEM", message: name + " WAS VOTED OUT!"}])
+    }
+
+    //gets a random color for all the players
+    const GetColors  = (numPlayers) => {
+        const colorArr = new Array(numPlayers)
+        //loops through all the players
+        for (let i = 0; i < numPlayers; i++ )
+        {
+            //using hex format
+            const possibleColors = "0123456789ABCDEF"
+
+            let element = "#"
+            //6 possible numbers for each color
+            for(let j = 0; j < 6; j++)
+            {
+                element+= possibleColors[Math.floor(Math.random() * possibleColors.length)]
+            }
+            colorArr[i] = element
+        }
+        return colorArr;
+    }
+
+    //sets the graph with our votes and knowing the players voted
+    const SetGraph = (votes, numberOfPlayersVoted) => {
+        //initialzie the array at the beginning so we're not  constantly creating a new array with one extra element
+        const barLabels = new Array(numberOfPlayersVoted)
+        const dataPoints = new Array(numberOfPlayersVoted);
+        let playerNumber = 0;
+        //traverse outer array, then inner array
+        for(let i = 0; i < votes.length; i++)
+        {
+            for(const name of votes[i])
+            {
+                barLabels[playerNumber] = name;
+                //remember, index 0 means vote of 1
+                dataPoints[playerNumber] = i + 1
+                playerNumber++;
+            }
+        }
+        const barColors = GetColors(numberOfPlayersVoted)
+
+        //update the graph
+        setGraphData(prev => {
+            return {labels: barLabels, datasets: [{
+                label: prev.datasets[0].label,
+                data: dataPoints,
+                backgroundColor: barColors
+            }]}
+        })
     }
 
     //the function called whenever we receive a message from the server. Most are self explanatory
@@ -42,9 +138,13 @@ export default function Home() {
                 setMode("Voting")
                 setHasVoted(false)
                 break;
-            case "Discussion Time":
-                console.log("Discuss time again! The voted player was: " + data.voted_person)
+            case "Person Voted Out":
+                setVotedPerson(data.voted_person)
                 VoteOutPlayer(data.voted_person)
+                SetGraph(data.votes, data.num_voted)
+                setMode("Intermission")
+                break;
+            case "Discussion Time":
                 setMode("Discussion")
                 break;
             case "Voted Out":
@@ -53,8 +153,7 @@ export default function Home() {
                 window.location.href = "/queue"
                 break;
             case "Game Over":
-                VoteOutPlayer(data.voted_person)
-                alert("Game is over now! Winner: " + data.winner + "! Oh yeah last person voted out was: " + data.voted_person)
+                alert("Game is over now! Winner: " + data.winner + "!")
                 socket.current.CloseSocket("Game Over");
                 window.location.href = "/queue"
                 break;
@@ -143,6 +242,12 @@ export default function Home() {
                     }
 
                     {mode == "Voting" && <p>Voting now! Pick who you want from the sidebar.</p>}
+                    {mode == "Intermission" && 
+                        <div>
+                            <p>Votes are in! Voted person was: {votedPerson}</p>
+                            <Chart type="bar" data={graphData} options={graphOptions}/>
+                        </div>
+                    }
                 </Box>
                 {/* Here is where the sidebar is drawn. */}
                 <Drawer

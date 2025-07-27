@@ -11,5 +11,7 @@ namespace Classes
         public String? winner { get; set; }
         public String? details { get; set; }
         public String[]? names { get; set; }
+        public HashSet<String>[]? votes { get; set; }
+        public byte? num_voted { get; set; }
     }
 }
