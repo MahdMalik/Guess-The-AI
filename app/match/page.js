@@ -2,7 +2,6 @@
 import { useEffect, useState, useRef } from "react";
 import { Sockets } from "../components/sockets";
 import { Button, Stack, Box, Drawer, List, ListItem, ListItemText, TextField } from "@mui/material";
-import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   BarElement,
@@ -10,9 +9,12 @@ import {
   LinearScale,
   Tooltip,
   Legend,
+  BarController
 } from 'chart.js';
 
-ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
+ChartJS.register(BarElement, CategoryScale, LinearScale, BarController, Tooltip, Legend);
+
+import { Chart } from "react-chartjs-2";
 
 export default function Home() {
     const socket = useRef(null);
@@ -25,6 +27,39 @@ export default function Home() {
     const [hasVoted, setHasVoted] = useState(false) 
     const [message, setMessage] = useState("")
     const [votedPerson, setVotedPerson] = useState("")
+    
+    const [graphData, setGraphData] = useState({
+        labels: [],
+        datasets: [
+            {
+                label: 'Votes',
+                data: [],
+                backgroundColor: []
+            }
+        ]
+    })
+
+    const graphOptions = 
+    {
+        scales: 
+        {
+            x: {
+                ticks: 
+                {
+                    maxRotation: 0,
+                    minRotation: 0,
+                }
+            },
+            y: 
+            {
+                beginAtZero: true,
+                ticks: 
+                {
+                    stepSize: 1,  // <-- increments of 1
+                }
+            }
+        }
+    };
 
     //using the player name, removes them from the array of players
     const VoteOutPlayer = (name) => {
@@ -36,32 +71,53 @@ export default function Home() {
         setMessage(prev => [...prev, {name: "SYSTEM", message: name + " WAS VOTED OUT!"}])
     }
 
-    let graphData = {
-        labels: [],
-        datasets: [
+    //gets a random color for all the players
+    const GetColors  = (numPlayers) => {
+        const colorArr = new Array(numPlayers)
+        //loops through all the players
+        for (let i = 0; i < numPlayers; i++ )
+        {
+            //using hex format
+            const possibleColors = "0123456789ABCDEF"
+
+            let element = "#"
+            //6 possible numbers for each color
+            for(let j = 0; j < 6; j++)
             {
-                label: 'Votes',
-                data: [],
-                backgroundColor: []
+                element+= possibleColors[Math.floor(Math.random() * possibleColors.length)]
             }
-        ]
+            colorArr[i] = element
+        }
+        return colorArr;
     }
 
+    //sets the graph with our votes and knowing the players voted
     const SetGraph = (votes, numberOfPlayersVoted) => {
+        //initialzie the array at the beginning so we're not  constantly creating a new array with one extra element
         const barLabels = new Array(numberOfPlayersVoted)
         const dataPoints = new Array(numberOfPlayersVoted);
         let playerNumber = 0;
+        //traverse outer array, then inner array
         for(let i = 0; i < votes.length; i++)
         {
             for(const name of votes[i])
             {
                 barLabels[playerNumber] = name;
+                //remember, index 0 means vote of 1
                 dataPoints[playerNumber] = i + 1
                 playerNumber++;
             }
         }
-        graphData.labels = barLabels;
-        graphData.datasets[0].data = dataPoints;
+        const barColors = GetColors(numberOfPlayersVoted)
+
+        //update the graph
+        setGraphData(prev => {
+            return {labels: barLabels, datasets: [{
+                label: prev.datasets[0].label,
+                data: dataPoints,
+                backgroundColor: barColors
+            }]}
+        })
     }
 
     //the function called whenever we receive a message from the server. Most are self explanatory
@@ -189,7 +245,7 @@ export default function Home() {
                     {mode == "Intermission" && 
                         <div>
                             <p>Votes are in! Voted person was: {votedPerson}</p>
-                            <Bar data={graphData}/>
+                            <Chart type="bar" data={graphData} options={graphOptions}/>
                         </div>
                     }
                 </Box>
