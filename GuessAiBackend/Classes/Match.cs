@@ -32,6 +32,8 @@ namespace Classes
         private HashSet<String> playersWhoNotVote;
 
         private byte playersVoted;
+
+        private Random rng;
         //simply creates the match
         public Match(LinkedList<Player> thePlayers, String theGamemode)
         {
@@ -66,6 +68,7 @@ namespace Classes
                 initialPlayerNames[index] = plr.GetName();
                 index++;
             }
+            rng = new Random();
         }
 
         public async Task RunTalk()
@@ -173,11 +176,29 @@ namespace Classes
             }
 
             String votedUser = "";
+
+            bool fair = true;
+
             //now, do the actual voting someone out part.
             for (sbyte i = (sbyte)(votes.Length - 1); i >= 0; i--)
             {
+
                 //for now we do this, but we'll have to have some handling for ties.
-                if (votes[i].Count > 0)
+                if (votes[i].Count > 1)
+                {
+                    //means we have a tie, and now we need to break it!
+                    HashSet<String> tiedPlayers = votes[i];
+                    //if it's a full tie, we need to break it randomly.
+                    if (votes[i].Count == players.Count)
+                    {
+                        //only losers will try to exploit this by always being the first ones to join the game ngl. Not even
+                        //sure if it's possible to exploit if you don't know your position in the matc. Also ties are extremely rare,
+                        //such that i don't think it's worth the extra runtime to iterate through the set to a random index.
+                        votedUser = votes[i].Last<String>();
+                        fair = false;
+                    }
+                }
+                else if (votes[i].Count == 1)
                 {
                     votedUser = votes[i].First<String>();
                     break;
@@ -195,6 +216,7 @@ namespace Classes
             nonVotedPacket.success = true;
             nonVotedPacket.message = "Person Voted Out";
             nonVotedPacket.num_voted = playersVoted;
+            nonVotedPacket.fair_voted_out = fair;
 
             //iterate through all the nodes with this iterator way, because in a foreach or for loop we can't just remove it
             //and be done with it
@@ -210,6 +232,7 @@ namespace Classes
                     packet.message = "Voted Out";
                     packet.server_id = hashCode;
                     packet.success = true;
+                    packet.fair_voted_out = fair;
 
                     players.Remove(plrNode);
                 }

@@ -13,5 +13,6 @@ namespace Classes
         public String[]? names { get; set; }
         public HashSet<String>[]? votes { get; set; }
         public byte? num_voted { get; set; }
+        public bool? fair_voted_out { get; set; }
     }
 }

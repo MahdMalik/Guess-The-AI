@@ -27,6 +27,7 @@ export default function Home() {
     const [hasVoted, setHasVoted] = useState(false) 
     const [message, setMessage] = useState("")
     const [votedPerson, setVotedPerson] = useState("")
+    const [fairVote, setIfFairVote] = useState(true)
     
     const [graphData, setGraphData] = useState({
         labels: [],
@@ -62,13 +63,22 @@ export default function Home() {
     };
 
     //using the player name, removes them from the array of players
-    const VoteOutPlayer = (name) => {
+    const VoteOutPlayer = (name, fair) => {
         const index = players.indexOf(name)
         setPlayers((prev) => {
             return prev.splice(index, 1)
         })
         //also want to send a system message that they were voted out
-        setMessage(prev => [...prev, {name: "SYSTEM", message: name + " WAS VOTED OUT!"}])
+        let message = name + " WAS VOTED OUT"
+        if(fair)
+        {
+            message += "!"
+        }
+        else
+        {
+            message += " RANDOMLY DUE TO TIE!"
+        }
+        setMessages(prev => [...prev, {name: "SYSTEM", message: message}])
     }
 
     //gets a random color for all the players
@@ -140,7 +150,9 @@ export default function Home() {
                 break;
             case "Person Voted Out":
                 setVotedPerson(data.voted_person)
-                VoteOutPlayer(data.voted_person)
+                setIfFairVote(data.fair_voted_out)
+
+                VoteOutPlayer(data.voted_person, data.fair_voted_out)
                 SetGraph(data.votes, data.num_voted)
                 setMode("Intermission")
                 break;
@@ -148,7 +160,14 @@ export default function Home() {
                 setMode("Discussion")
                 break;
             case "Voted Out":
-                alert("LMAO YOU GOT VOTED OUT BUM!")
+                if(data.fair_voted_out)
+                {
+                    alert("LMAO YOU GOT VOTED OUT BUM!")
+                }
+                else
+                {
+                    alert("You were picked to be randomly eliminated due to a tie! Sorry")
+                }
                 socket.current.CloseSocket("Game Over");
                 window.location.href = "/queue"
                 break;
@@ -242,12 +261,7 @@ export default function Home() {
                     }
 
                     {mode == "Voting" && <p>Voting now! Pick who you want from the sidebar.</p>}
-                    {mode == "Intermission" && 
-                        <div>
-                            <p>Votes are in! Voted person was: {votedPerson}</p>
-                            <Chart type="bar" data={graphData} options={graphOptions}/>
-                        </div>
-                    }
+                    {mode == "Intermission" && <Chart type="bar" data={graphData} options={graphOptions}/>}
                 </Box>
                 {/* Here is where the sidebar is drawn. */}
                 <Drawer
