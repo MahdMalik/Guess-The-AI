@@ -30,6 +30,8 @@ namespace Classes
         private Dictionary<String, byte> playerVoteMapping;
 
         private HashSet<String> playersWhoNotVote;
+
+        private byte playersVoted;
         //simply creates the match
         public Match(LinkedList<Player> thePlayers, String theGamemode)
         {
@@ -136,6 +138,7 @@ namespace Classes
             //in this case, an index of 0 means 1 vote, don't be fooled.
             else
             {
+                playersVoted++;
                 votes[0].Add(chosenUser);
                 playerVoteMapping.Add(chosenUser, 0);
             }
@@ -187,9 +190,11 @@ namespace Classes
 
             ServerMessage nonVotedPacket = new ServerMessage();
             nonVotedPacket.voted_person = votedUser;
+            nonVotedPacket.votes = votes;
             nonVotedPacket.server_id = hashCode;
             nonVotedPacket.success = true;
             nonVotedPacket.message = "Person Voted Out";
+            nonVotedPacket.num_voted = playersVoted;
 
             //iterate through all the nodes with this iterator way, because in a foreach or for loop we can't just remove it
             //and be done with it
@@ -238,7 +243,6 @@ namespace Classes
                 //end game!
                 Console.WriteLine("Game has ended now!");
                 gameOver = true;
-
                 nextPacket.message = "Game Over";
                 nextPacket.winner = "Players Win!";
             }
@@ -285,7 +289,7 @@ namespace Classes
                     votes[i] = new HashSet<string>();
                 }
             playerVoteMapping = new Dictionary<String, byte>();
-
+            playersVoted = 0;
         }
 
         public String GetHash()

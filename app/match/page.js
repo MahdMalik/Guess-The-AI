@@ -2,6 +2,17 @@
 import { useEffect, useState, useRef } from "react";
 import { Sockets } from "../components/sockets";
 import { Button, Stack, Box, Drawer, List, ListItem, ListItemText, TextField } from "@mui/material";
+import { Bar } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+
+ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
 export default function Home() {
     const socket = useRef(null);
@@ -25,6 +36,34 @@ export default function Home() {
         setMessage(prev => [...prev, {name: "SYSTEM", message: name + " WAS VOTED OUT!"}])
     }
 
+    let graphData = {
+        labels: [],
+        datasets: [
+            {
+                label: 'Votes',
+                data: [],
+                backgroundColor: []
+            }
+        ]
+    }
+
+    const SetGraph = (votes, numberOfPlayersVoted) => {
+        const barLabels = new Array(numberOfPlayersVoted)
+        const dataPoints = new Array(numberOfPlayersVoted);
+        let playerNumber = 0;
+        for(let i = 0; i < votes.length; i++)
+        {
+            for(const name of votes[i])
+            {
+                barLabels[playerNumber] = name;
+                dataPoints[playerNumber] = i + 1
+                playerNumber++;
+            }
+        }
+        graphData.labels = barLabels;
+        graphData.datasets[0].data = dataPoints;
+    }
+
     //the function called whenever we receive a message from the server. Most are self explanatory
     const OnMessageFunction = async (data) => {
         //GAME START!
@@ -46,6 +85,7 @@ export default function Home() {
             case "Person Voted Out":
                 setVotedPerson(data.voted_person)
                 VoteOutPlayer(data.voted_person)
+                SetGraph(data.votes, data.num_voted)
                 setMode("Intermission")
                 break;
             case "Discussion Time":
@@ -146,7 +186,12 @@ export default function Home() {
                     }
 
                     {mode == "Voting" && <p>Voting now! Pick who you want from the sidebar.</p>}
-                    {mode == "Intermission" && <p>Votes are in! Voted person was: {votedPerson}</p>}
+                    {mode == "Intermission" && 
+                        <div>
+                            <p>Votes are in! Voted person was: {votedPerson}</p>
+                            <Bar data={graphData}/>
+                        </div>
+                    }
                 </Box>
                 {/* Here is where the sidebar is drawn. */}
                 <Drawer
