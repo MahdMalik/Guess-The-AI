@@ -24,10 +24,9 @@ export default function Home() {
     const [messages, setMessages] = useState([])
     const [mode, setMode] = useState("Discussion")
     const [players, setPlayers] = useState([])
+    const [votablePlayers, setVotablePlayers] = useState([])
     const [hasVoted, setHasVoted] = useState(false) 
     const [message, setMessage] = useState("")
-    const [votedPerson, setVotedPerson] = useState("")
-    const [fairVote, setIfFairVote] = useState(true)
     
     const [graphData, setGraphData] = useState({
         labels: [],
@@ -147,11 +146,13 @@ export default function Home() {
                 console.log("Time to vote!")
                 setMode("Voting")
                 setHasVoted(false)
+                //reset this
+                setVotablePlayers(players)
                 break;
             case "Person Voted Out":
                 setVotedPerson(data.voted_person)
                 setIfFairVote(data.fair_voted_out)
-
+6
                 VoteOutPlayer(data.voted_person, data.fair_voted_out)
                 SetGraph(data.votes, data.num_voted)
                 setMode("Intermission")
@@ -260,7 +261,21 @@ export default function Home() {
                         </Stack>
                     }
 
-                    {mode == "Voting" && <p>Voting now! Pick who you want from the sidebar.</p>}
+                    {mode == "Voting" && 
+                        <div>
+                            <p>Voting now! Pick who you want from the sidebar.</p>
+                            {!hasVoted &&
+                            <Stack flexDirection="row">
+                                {votablePlayers.map((player, i) =>
+                                    (
+                                        <Stack flexDirection="column" key={i}>
+                                            <p>{player}</p>
+                                            <Button variant="contained" onClick={() => SendVote(player)}>VOTE</Button>
+                                        </Stack>
+                                    ))}
+                            </Stack>}
+                        </div>
+                    }
                     {mode == "Intermission" && <Chart type="bar" data={graphData} options={graphOptions}/>}
                 </Box>
                 {/* Here is where the sidebar is drawn. */}
@@ -275,10 +290,7 @@ export default function Home() {
                 >
                     <p>Players:</p>
                     {players.map((player, i) =>
-                        (<Stack flexDirection="row" key={i}>
-                            <p>#{i+1}: {player}</p>
-                            {mode == "Voting" && !hasVoted && <Button variant="contained" onClick={() => SendVote(player)}>VOTE</Button>}
-                        </Stack>)
+                        (<p key={i}>#{i+1}: {player}</p>)
                     )}
                 </Drawer>
             </Box>
